@@ -14,5 +14,6 @@ import com.proyecto.TurboMechanics.entity.Users;
 public interface UsersRepository extends JpaRepository<Users, Long>{
     Optional<Users> findByEmail(String email);
     List<Users> findByRolId(Long rolId);
+    Optional<Users> findByIdentification(Integer identification);
 
 } 
