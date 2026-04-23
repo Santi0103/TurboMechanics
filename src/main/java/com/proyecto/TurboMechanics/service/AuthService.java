@@ -36,6 +36,7 @@ public class AuthService {
    @Transactional
     public MessageResponseDTO register(@Valid RegisterRequestDTO request) {
         MessageResponseDTO response = new MessageResponseDTO();
+        response.setMessage("registration successful");
 
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("The email is already in use");

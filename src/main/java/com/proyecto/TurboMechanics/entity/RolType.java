@@ -3,7 +3,7 @@ package com.proyecto.TurboMechanics.entity;
 public enum RolType {
     CLIENTE(1L),
     MECANICO(2L),
-    ADMIN(3L);  // ajusta según tus roles
+    ADMIN(3L);
 
     private final Long id;
 
