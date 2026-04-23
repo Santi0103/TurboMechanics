@@ -19,7 +19,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
     private final AuthService authService;
+    
     /**
      * 
      * @param request the DTO containing username, email and password
