@@ -34,18 +34,18 @@ public class AdminService {
     }
 
     /**
-     * Extract all customer information by ID
+     * Extract all customer information by Identification
      * lance RuntimeException yes not exist o yes not is CLIENT.
-     * @param id parameter is id the client
+     * @param identification parameter is identificcation the client
      * @return return a client for your ID
      */
     @Transactional(readOnly = true)
-    public UserResponseDTO getClientById(Long id) {
-        Users user = usersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+    public UserResponseDTO getClientByIdentification(Integer identification) {
+        Users user = usersRepository.findByIdentification(identification)
+                .orElseThrow(() -> new RuntimeException("client not found with identification: " + identification));
  
         if (!user.getRolId().equals(RolType.CLIENTE.getId())) {
-            throw new RuntimeException("El usuario con id " + id + " no es un cliente");
+            throw new RuntimeException("the user with identification " + identification + " not is a client");
         }
  
         return mapToDTO(user);
@@ -53,64 +53,56 @@ public class AdminService {
 
     /**
      * update customer data username, identification, phone and email. omits the password
-     * @param id id the client to update
+     * @param identification identification the client to update
      * @param request DTO with the new values: username, identification, phone, email
      * @return {@link UserResponseDTO} with the data already update
      */
     @Transactional
-    public UserResponseDTO updateClient(Long id, UserRequestDTO request) {
- 
-        Users user = usersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Client not found with id: " + id));
- 
-        if (!user.getRolId().equals(RolType.CLIENTE.getId())) {
-            throw new RuntimeException("the user with id " + id + " not is a client");
-        }
- 
-        // Validar que el nuevo email no esté en uso por otro usuario
+    public UserResponseDTO updateClient(Integer identification, UserRequestDTO request) {
+        Users user = findClient(identification);
+
         usersRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) {
+            if (!existing.getIdentification().equals(identification)) {
                 throw new RuntimeException("the email " + request.getEmail() + " It is already in use");
             }
         });
- 
+
         user.setUsername(request.getUsername());
         user.setIdentification(request.getIdentification());
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
- 
+
         usersRepository.save(user);
- 
         return mapToDTO(user);
     }
 
     /**
      * Permanently removes a customer from the database.
      *
-     * @param id ID of cliente to delete
+     * @param identification Identification of cliente to delete
      * @throws RuntimeException yes he cliente not exists or not is CLIENTE
      */
     @Transactional
-    public void deleteClient(Long id) {
-        Users user = findClient(id);
+    public void deleteClient(Integer identification) {
+        Users user = findClient(identification);
         usersRepository.delete(user);
     }
  
  
     /**
-     * Search for a user by ID and validate that they have the CLIENT role.
+     * Search for a user by Identification and validate that they have the CLIENT role.
      * Centralize the validation to avoid repeating it in each method.
      *
-     * @param id ID of user the search
+     * @param identification Identification of user the search
      * @return entity {@link Users} valid
      * @throws RuntimeException yes not exists or not is CLIENTE
      */
-    private Users findClient(Long id) {
-        Users user = usersRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+    private Users findClient(Integer identification) {
+        Users user = usersRepository.findByIdentification(identification)
+                .orElseThrow(() -> new RuntimeException("Client not found with identification: " + identification));
  
         if (!user.getRolId().equals(RolType.CLIENTE.getId())) {
-            throw new RuntimeException("El usuario con id " + id + " no es un cliente");
+            throw new RuntimeException("The user with identification " + identification + " not is a client");
         }
  
         return user;

@@ -32,7 +32,7 @@ public class AdminController {
  
     /**
      * Returns the list of all customers registered in the system.
-     * Only accessible by users with the {@code ADMIN} role.
+     * Only accessible by users with the {@code ADMIN} and {@code MECANICO}role.
      * @return {@code 200 OK} with the list of {@link UserResponseDTO},
      * or {@code 500 INTERNAL SERVER ERROR} if an unexpected error occurs
      */
@@ -48,17 +48,17 @@ public class AdminController {
     }
  
     /**
-    * Returns information for a specific client by their ID.
+    * Returns information for a specific client by their Identification.
     * Only accessible to users with the {@code ADMIN} role.
-    * @param id Unique identifier of the client to query
+    * @param identification Unique identifier of the client to query
     * @return {@code 200 OK} with the {@link UserResponseDTO} of the found client,
     * or {@code 404 NOT FOUND} if the client does not exist or does not have the CLIENT role
     */
     @RequiresRole({RolType.ADMIN})
-    @GetMapping("/users/{id}")
-    public ResponseEntity<UserResponseDTO> getClientById(@PathVariable Long id) {
+    @GetMapping("/users/{identification}")
+    public ResponseEntity<UserResponseDTO> getClientByIdentification(@PathVariable Integer identification) {
         try {
-            UserResponseDTO client = adminService.getClientById(id);
+            UserResponseDTO client = adminService.getClientByIdentification(identification);
             return ResponseEntity.ok(client);
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
@@ -70,11 +70,11 @@ public class AdminController {
     /**
     * Updates the personal data of an existing customer.
     *
-    * Only accessible by users with the {@code ADMIN} role. The fields
+    * Only accessible by users with the {@code ADMIN} {@code MECANICO} role. The fields
     * that can be updated are: {@code username}, {@code identification},
     * {@code phone}, and {@code email}.
     *
-    * @param id: Unique identifier of the customer to be updated
+    * @param identification: Unique identifier of the customer to be updated
     * @param request: Request body with the new customer data;
     * Automatically validated by {@code @Valid}
     * @return {@code 200 OK} with the updated {@link UserResponseDTO},
@@ -82,10 +82,10 @@ public class AdminController {
     * or the email address is already in use
     */
     @RequiresRole({RolType.ADMIN, RolType.MECANICO})
-    @PutMapping("/users/{id}")
-    public ResponseEntity<UserResponseDTO> updateClient(@PathVariable Long id, @Valid @RequestBody UserRequestDTO request) {
+    @PutMapping("/users/{identification}")
+    public ResponseEntity<UserResponseDTO> updateClient(@PathVariable Integer identification, @Valid @RequestBody UserRequestDTO request) {
         try {
-            UserResponseDTO updated = adminService.updateClient(id, request);
+            UserResponseDTO updated = adminService.updateClient(identification, request);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
@@ -99,15 +99,15 @@ public class AdminController {
     * Only accessible by users with the {@code ADMIN} role. This action
     * is irreversible; if history needs to be preserved, consider
     * a soft delete instead.
-    * @param id Unique identifier of the client to be deleted
+    * @param identification Unique identifier of the client to be deleted
     * @return {@code 200 OK} with confirmation message,
     * or {@code 400 BAD REQUEST} if the client does not exist or is not a CLIENT
     */
     @RequiresRole({RolType.ADMIN})
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<MessageResponseDTO> deleteClient(@PathVariable Long id) {
+    @DeleteMapping("/users/{identification}")
+    public ResponseEntity<MessageResponseDTO> deleteClient(@PathVariable Integer identification) {
         try {
-            adminService.deleteClient(id);
+            adminService.deleteClient(identification);
             MessageResponseDTO response = new MessageResponseDTO();
             response.setMessage("client delete correctly");
             return ResponseEntity.ok(response);
