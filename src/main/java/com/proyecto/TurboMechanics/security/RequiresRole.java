@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.proyecto.TurboMechanics.entity.RolType;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 
 // Define donde se puede usar la anotación
 @Target(ElementType.METHOD)
@@ -13,5 +13,5 @@ import com.proyecto.TurboMechanics.entity.RolType;
 @Retention(RetentionPolicy.RUNTIME)
 // Anotacion personalizada
 public @interface RequiresRole {
-    RolType[] value();
+    RolEnum[] value();
 }

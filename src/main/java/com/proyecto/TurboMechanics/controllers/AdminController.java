@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.proyecto.TurboMechanics.dto.MessageResponseDTO;
 import com.proyecto.TurboMechanics.dto.UserRequestDTO;
 import com.proyecto.TurboMechanics.dto.UserResponseDTO;
-import com.proyecto.TurboMechanics.entity.RolType;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.AdminService;
 
@@ -36,7 +36,7 @@ public class AdminController {
      * @return {@code 200 OK} with the list of {@link UserResponseDTO},
      * or {@code 500 INTERNAL SERVER ERROR} if an unexpected error occurs
      */
-    @RequiresRole({RolType.ADMIN, RolType.MECANICO})
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
     @GetMapping("/users")
     public ResponseEntity<List<UserResponseDTO>> getAllClients() {
         try {
@@ -54,7 +54,7 @@ public class AdminController {
     * @return {@code 200 OK} with the {@link UserResponseDTO} of the found client,
     * or {@code 404 NOT FOUND} if the client does not exist or does not have the CLIENT role
     */
-    @RequiresRole({RolType.ADMIN})
+    @RequiresRole({RolEnum.ADMIN})
     @GetMapping("/users/{identification}")
     public ResponseEntity<UserResponseDTO> getClientByIdentification(@PathVariable Integer identification) {
         try {
@@ -81,7 +81,7 @@ public class AdminController {
     * or {@code 400 BAD REQUEST} if the customer does not exist, is not a CUSTOMER,
     * or the email address is already in use
     */
-    @RequiresRole({RolType.ADMIN, RolType.MECANICO})
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
     @PutMapping("/users/{identification}")
     public ResponseEntity<UserResponseDTO> updateClient(@PathVariable Integer identification, @Valid @RequestBody UserRequestDTO request) {
         try {
@@ -103,7 +103,7 @@ public class AdminController {
     * @return {@code 200 OK} with confirmation message,
     * or {@code 400 BAD REQUEST} if the client does not exist or is not a CLIENT
     */
-    @RequiresRole({RolType.ADMIN})
+    @RequiresRole({RolEnum.ADMIN})
     @DeleteMapping("/users/{identification}")
     public ResponseEntity<MessageResponseDTO> deleteClient(@PathVariable Integer identification) {
         try {
