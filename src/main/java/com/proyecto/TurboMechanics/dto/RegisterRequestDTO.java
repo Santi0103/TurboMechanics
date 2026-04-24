@@ -2,6 +2,7 @@ package com.proyecto.TurboMechanics.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -12,8 +13,7 @@ public class RegisterRequestDTO {
     @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
     private String username;
 
-    @NotBlank(message = "Identification is required")
-    @Size(min = 6, max = 12, message = "Identification must be at least 6 characters")
+    @NotNull(message = "Identification is required")
     private Integer identification; 
 
     @NotBlank(message = "Phone is required")
