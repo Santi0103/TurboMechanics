@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.TurboMechanics.dto.UserRequestDTO;
 import com.proyecto.TurboMechanics.dto.UserResponseDTO;
-import com.proyecto.TurboMechanics.entity.RolType;
 import com.proyecto.TurboMechanics.entity.Users;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class AdminService {
      */
     @Transactional(readOnly = true)
     public List<UserResponseDTO> getAllClients() {
-        List<Users> clients = usersRepository.findByRolId(RolType.CLIENTE.getId());
+        List<Users> clients = usersRepository.findByRolId(RolEnum.CLIENTE.getId());
         return clients.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -44,7 +44,7 @@ public class AdminService {
         Users user = usersRepository.findByIdentification(identification)
                 .orElseThrow(() -> new RuntimeException("client not found with identification: " + identification));
  
-        if (!user.getRolId().equals(RolType.CLIENTE.getId())) {
+        if (!user.getRolId().equals(RolEnum.CLIENTE.getId())) {
             throw new RuntimeException("the user with identification " + identification + " not is a client");
         }
  
@@ -101,7 +101,7 @@ public class AdminService {
         Users user = usersRepository.findByIdentification(identification)
                 .orElseThrow(() -> new RuntimeException("Client not found with identification: " + identification));
  
-        if (!user.getRolId().equals(RolType.CLIENTE.getId())) {
+        if (!user.getRolId().equals(RolEnum.CLIENTE.getId())) {
             throw new RuntimeException("The user with identification " + identification + " not is a client");
         }
  

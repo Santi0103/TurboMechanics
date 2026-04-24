@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.TurboMechanics.dto.OrdenTrabajoRequestDTO;
 import com.proyecto.TurboMechanics.dto.OrdenTrabajoResponseDTO;
-import com.proyecto.TurboMechanics.entity.RolType;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.OrdenTrabajoService;
 
@@ -28,7 +28,7 @@ public class OrdenTrabajoController {
     private final OrdenTrabajoService ordenTrabajoService;
 
     @PostMapping
-    @RequiresRole({ RolType.MECANICO })
+    @RequiresRole({ RolEnum.MECANICO })
     public ResponseEntity<OrdenTrabajoResponseDTO> crear(@Valid @RequestBody OrdenTrabajoRequestDTO request) {
         try {
             OrdenTrabajoResponseDTO response = ordenTrabajoService.crear(request);
@@ -39,7 +39,7 @@ public class OrdenTrabajoController {
     }
 
     @GetMapping
-    @RequiresRole({ RolType.MECANICO, RolType.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
     public ResponseEntity<List<OrdenTrabajoResponseDTO>> listar() {
         try {
             List<OrdenTrabajoResponseDTO> response = ordenTrabajoService.listar();
@@ -50,7 +50,7 @@ public class OrdenTrabajoController {
     }
 
     @GetMapping("/{id}")
-    @RequiresRole({ RolType.MECANICO, RolType.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
     public ResponseEntity<OrdenTrabajoResponseDTO> obtenerPorId(@PathVariable Long id) {
         try {
             OrdenTrabajoResponseDTO response = ordenTrabajoService.obtenerPorId(id);
@@ -61,7 +61,7 @@ public class OrdenTrabajoController {
     }
 
     @GetMapping("/numero/{numeroOrden}")
-    @RequiresRole({ RolType.MECANICO, RolType.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
     public ResponseEntity<OrdenTrabajoResponseDTO> obtenerPorNumero(@PathVariable String numeroOrden) {
         try {
             OrdenTrabajoResponseDTO response = ordenTrabajoService.obtenerPorNumero(numeroOrden);
@@ -72,7 +72,7 @@ public class OrdenTrabajoController {
     }
 
     @GetMapping("/placa/{placa}")
-    @RequiresRole({ RolType.MECANICO, RolType.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
     public ResponseEntity<List<OrdenTrabajoResponseDTO>> buscarPorPlaca(@PathVariable String placa) {
         try {
             List<OrdenTrabajoResponseDTO> response = ordenTrabajoService.buscarPorPlaca(placa);
@@ -83,7 +83,7 @@ public class OrdenTrabajoController {
     }
 
     @GetMapping("/cliente/{identificacion}")
-    @RequiresRole({ RolType.MECANICO, RolType.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
     public ResponseEntity<List<OrdenTrabajoResponseDTO>> buscarPorCliente(@PathVariable String identificacion) {
         try {
             List<OrdenTrabajoResponseDTO> response = ordenTrabajoService.buscarPorCliente(identificacion);

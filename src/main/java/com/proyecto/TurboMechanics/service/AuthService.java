@@ -12,8 +12,8 @@ import com.proyecto.TurboMechanics.dto.LoginResponseDTO;
 import com.proyecto.TurboMechanics.dto.MessageResponseDTO;
 import com.proyecto.TurboMechanics.dto.RefreshTokenResponseDTO;
 import com.proyecto.TurboMechanics.dto.RegisterRequestDTO;
-import com.proyecto.TurboMechanics.entity.RolType;
 import com.proyecto.TurboMechanics.entity.Users;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
 
 import jakarta.validation.Valid;
@@ -50,7 +50,7 @@ public class AuthService {
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRolId(RolType.CLIENTE.getId());
+        user.setRolId(RolEnum.CLIENTE.getId());
 
         usersRepository.save(user);
 
