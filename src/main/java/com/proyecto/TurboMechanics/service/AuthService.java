@@ -60,23 +60,30 @@ public class AuthService {
 
     public LoginResponseDTO login(LoginRequestDTO request) {
         LoginResponseDTO response = new LoginResponseDTO();
+
         Optional<Users> user = usersRepository.findByEmail(request.getEmail());
 
-        if (user.isEmpty() && request.getEmail() != null) {
-            response.setMessage("Este usuario no se encuentra registrado");
+        if (user.isEmpty()) {
+            response.setMessage("this user not found register");
             return response;
         }
 
         Users userFound = user.get();
 
         if (!passwordEncoder.matches(request.getPassword(), userFound.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
+            response.setMessage("password incorrect");
+            return response;
         }
 
-        String jwt = jwtService.generateToken(userFound.getId(), userFound.getUsername(), userFound.getRolId());
+        String jwt = jwtService.generateToken(
+            userFound.getId(),
+            userFound.getUsername(),
+            userFound.getRolId()
+        );
 
-        response.setMessage("Inicio de sesión exitoso");
+        response.setMessage("Login successfully");
         response.setJwt(jwt);
+
         return response;
     }
 
