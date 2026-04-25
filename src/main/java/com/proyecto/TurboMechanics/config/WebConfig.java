@@ -17,7 +17,6 @@ public class WebConfig implements WebMvcConfigurer{
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
 
-        // Registramos el interceptor para que se ejecute en todas las rutas
         registry.addInterceptor(roleInterceptor);
     }
 }
