@@ -23,9 +23,9 @@ public class AuthController {
     private final AuthService authService;
     
     /**
-     * 
-     * @param request the DTO containing username, email and password
-     * @return 201 CREATED with a success message, or 400 BAD REQUEST if validation fails
+     * Registrar el cliente  
+     * @param request RegisterRequestDTO datos que le pide al cliente para registrarse
+     * @return retorna MessageResponseDTO indicando que el cliente fue creado
      */
     @PostMapping("/register")
     public ResponseEntity<MessageResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
@@ -38,7 +38,12 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
-
+    
+    /**
+     * Iniciar sesion usuario
+     * @param request LoginRequestDTO datos para iniciar sesion
+     * @return los datos del incio de sesion
+     */
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
         try {
@@ -52,6 +57,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * Refresca el token
+     * @param request requiere el token viejo
+     * @return retorna un token nuevo
+     */
     @GetMapping("/refresh")
     public ResponseEntity<RefreshTokenResponseDTO> refreshToken(HttpServletRequest request) {
         String autheader = request.getHeader("Authorization");

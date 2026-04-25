@@ -31,17 +31,17 @@ public class AuthService {
     private final JwtService jwtService;
     
     /**
-     * Registers a new user (CLIENT role by default)
-     * @param request DTO with username, email and password
-     * @return success message
+     * Registro del cliente
+     * @param request RegisterRequestDTO datos para el registro
+     * @return retorna un mensaje de registro exitoso
      */
    @Transactional
     public MessageResponseDTO register(@Valid RegisterRequestDTO request) {
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("registration successful");
+        response.setMessage("Registrado correctamente");
 
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("The email is already in use");
+            throw new RuntimeException("El email ya se encuentra en uso");
         }
 
         Users user = new Users();
@@ -58,20 +58,25 @@ public class AuthService {
         return response;
     }
 
+    /**
+     * Inicio de sesion 
+     * @param request LoginRequestDTO datos para el incio de sesion
+     * @return retorna mensaje de inicio de seion correctamente
+     */
     public LoginResponseDTO login(LoginRequestDTO request) {
         LoginResponseDTO response = new LoginResponseDTO();
 
         Optional<Users> user = usersRepository.findByEmail(request.getEmail());
 
         if (user.isEmpty()) {
-            response.setMessage("this user not found register");
+            response.setMessage("El usuario no fue encontrado");
             return response;
         }
 
         Users userFound = user.get();
 
         if (!passwordEncoder.matches(request.getPassword(), userFound.getPassword())) {
-            response.setMessage("password incorrect");
+            response.setMessage("contraseña incorrecta");
             return response;
         }
 
@@ -81,7 +86,7 @@ public class AuthService {
             userFound.getRolId()
         );
 
-        response.setMessage("Login successfully");
+        response.setMessage("inicio de sesion correctamente");
         response.setJwt(jwt);
 
         return response;

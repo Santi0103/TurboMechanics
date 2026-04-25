@@ -31,10 +31,8 @@ public class AdminController {
     private final AdminService adminService;
  
     /**
-     * Returns the list of all customers registered in the system.
-     * Only accessible by users with the {@code ADMIN} and {@code MECANICO}role.
-     * @return {@code 200 OK} with the list of {@link UserResponseDTO},
-     * or {@code 500 INTERNAL SERVER ERROR} if an unexpected error occurs
+     * Obtiene todos los clientes
+     * @return retorna todos los clientes que hay registrados
      */
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
     @GetMapping("/users")
@@ -48,12 +46,10 @@ public class AdminController {
     }
  
     /**
-    * Returns information for a specific client by their Identification.
-    * Only accessible to users with the {@code ADMIN} role.
-    * @param identification Unique identifier of the client to query
-    * @return {@code 200 OK} with the {@link UserResponseDTO} of the found client,
-    * or {@code 404 NOT FOUND} if the client does not exist or does not have the CLIENT role
-    */
+     * Busca el cliente por su identificacion
+     * @param identification identificacion del cliente
+     * @return retorna el cliente en base a su identificacion
+     */
     @RequiresRole({RolEnum.ADMIN})
     @GetMapping("/users/{identification}")
     public ResponseEntity<UserResponseDTO> getClientByIdentification(@PathVariable Integer identification) {
@@ -68,19 +64,11 @@ public class AdminController {
     }
 
     /**
-    * Updates the personal data of an existing customer.
-    *
-    * Only accessible by users with the {@code ADMIN} {@code MECANICO} role. The fields
-    * that can be updated are: {@code username}, {@code identification},
-    * {@code phone}, and {@code email}.
-    *
-    * @param identification: Unique identifier of the customer to be updated
-    * @param request: Request body with the new customer data;
-    * Automatically validated by {@code @Valid}
-    * @return {@code 200 OK} with the updated {@link UserResponseDTO},
-    * or {@code 400 BAD REQUEST} if the customer does not exist, is not a CUSTOMER,
-    * or the email address is already in use
-    */
+     * Actualizar la informacion del cliente
+     * @param identification identificacion del cliente
+     * @param request UserRequestDTO par ala actualizacion de los datos
+     * @return retorna los datos ya actualizados
+     */
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
     @PutMapping("/users/{identification}")
     public ResponseEntity<UserResponseDTO> updateClient(@PathVariable Integer identification, @Valid @RequestBody UserRequestDTO request) {
@@ -95,21 +83,17 @@ public class AdminController {
     }
 
     /**
-    * Permanently deletes a client from the database.
-    * Only accessible by users with the {@code ADMIN} role. This action
-    * is irreversible; if history needs to be preserved, consider
-    * a soft delete instead.
-    * @param identification Unique identifier of the client to be deleted
-    * @return {@code 200 OK} with confirmation message,
-    * or {@code 400 BAD REQUEST} if the client does not exist or is not a CLIENT
-    */
+     * Elimina al cliente permanentemente
+     * @param identification identificacion del cliente
+     * @return  MessageResponseDTO eliminacr cliente
+     */
     @RequiresRole({RolEnum.ADMIN})
     @DeleteMapping("/users/{identification}")
     public ResponseEntity<MessageResponseDTO> deleteClient(@PathVariable Integer identification) {
         try {
             adminService.deleteClient(identification);
             MessageResponseDTO response = new MessageResponseDTO();
-            response.setMessage("client delete correctly");
+            response.setMessage("Cliente Eliminado Correctamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             MessageResponseDTO error = new MessageResponseDTO();
