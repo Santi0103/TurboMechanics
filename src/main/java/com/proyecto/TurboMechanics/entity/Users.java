@@ -46,4 +46,12 @@ public class Users {
     @NotNull(message = "El rol es obligatorio")
     @Column(name = "rol_id", nullable = false)
     private Long rolId;
+
+    /** Código de recuperación de contraseña (6 dígitos, expira en 15 min) */
+    @Column(name = "reset_code", length = 6)
+    private String resetCode;
+
+    /** Fecha y hora de expiración del código de recuperación */
+    @Column(name = "reset_code_expiry")
+    private java.time.LocalDateTime resetCodeExpiry;
 }
