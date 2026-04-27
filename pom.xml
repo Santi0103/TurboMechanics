@@ -103,6 +103,10 @@
 			<groupId>com.itextpdf</groupId>
 			<artifactId>layout</artifactId>
 			<version>8.0.3</version>
+		<!-- Mail -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>        
 		</dependency>
         <!-- Test -->
         <dependency>

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.TurboMechanics.dto.WorkOrderRequestDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderResponseDTO;
+import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.WorkOrderService;
@@ -21,7 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/ordenes")
+@RequestMapping("/orders")
 @RequiredArgsConstructor
 public class WorkOrderController {
     
@@ -116,6 +117,22 @@ public class WorkOrderController {
     public ResponseEntity<List<WorkOrderResponseDTO>> listByClient(@PathVariable Integer clientidentification) {
         try {
             List<WorkOrderResponseDTO> response = ordenTrabajoService.listByClient(clientidentification);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    /**
+     * Endpoint para listar órdenes de trabajo por estado. Solo accesible para usuarios con rol MECANICO o ADMIN.
+     * @param stateorder el estado a filtrar (RECIBIDO, EN_DIAGNOSTICO, EN_REPARACION, LISTO, ENTREGADO, CANCELADO)
+     * @return 200 OK con la lista de órdenes que coinciden con el estado, o 500 INTERNAL SERVER ERROR si ocurre un error inesperado
+     */
+    @GetMapping("/state/{stateorder}")
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
+    public ResponseEntity<List<WorkOrderResponseDTO>> listByState(@PathVariable WorkOrder.StateOrder stateorder) {
+        try {
+            List<WorkOrderResponseDTO> response = ordenTrabajoService.listByState(stateorder);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

@@ -16,6 +16,18 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: santimosquerav@gmail.com       # Cambiar por el correo del taller
+    password: santiago0103           # Contraseña de aplicación de Gmail
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 9090
 

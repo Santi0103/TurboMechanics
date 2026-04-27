@@ -113,6 +113,17 @@ public class WorkOrderService {
     }
 
     /**
+     * Lista las órdenes de trabajo que coinciden con el estado proporcionado, transformándolas a DTOs de respuesta.
+     * @param stateorder El estado de la orden a buscar (RECIBIDO, EN_DIAGNOSTICO, EN_REPARACION, LISTO, ENTREGADO, CANCELADO)
+     * @return Lista de WorkOrderResponseDTO con los datos de las órdenes que coinciden con el estado, o lista vacía si no hay coincidencias
+     */
+    @Transactional(readOnly = true)
+    public List<WorkOrderResponseDTO> listByState(WorkOrder.StateOrder stateorder) {
+        return ordenTrabajoRepository.findByStateorder(stateorder)
+                .stream().map(this::toResponse).toList();
+    }
+
+    /**
      * Genera un número de orden único en formato "OT-AAAA-NNNN", donde "AAAA" es el año actual y "NNNN" es un número secuencial que se reinicia cada año. El método verifica que el número generado no exista ya en la base de datos, incrementando el número secuencial hasta encontrar uno disponible.
      * @return Un número de orden único para la nueva orden de trabajo
      */
