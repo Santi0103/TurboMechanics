@@ -5,12 +5,12 @@ spring:
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-    password: 
+    password: santi0103  # Contraseña kevin postgreSQL: santi0103, contraseña muñoz postgreSQL: Jn190424
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate: 
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

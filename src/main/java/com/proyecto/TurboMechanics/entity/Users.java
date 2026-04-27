@@ -12,6 +12,7 @@ public class Users {
     /**Id del cliente */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
     private Long id;
 
     /**nombre del cliente */
@@ -39,12 +40,12 @@ public class Users {
     /**contraseña del cliente */
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 6, message = "Mínimo 6 caracteres")
-    @Column(name = "password")
+    @Column(name = "contrasena")
     private String password;
 
     /** rolId del clienet */
     @NotNull(message = "El rol es obligatorio")
-    @Column(name = "rol_id", nullable = false)
+    @Column(name = "rol", nullable = false)
     private Long rolId;
 
     /** Código de recuperación de contraseña (6 dígitos, expira en 15 min) */
