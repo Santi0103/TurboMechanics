@@ -99,10 +99,13 @@
 			<artifactId>kernel</artifactId>
 			<version>8.0.3</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>layout</artifactId>
 			<version>8.0.3</version>
+		</dependency>
+
 		<!-- Mail -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
