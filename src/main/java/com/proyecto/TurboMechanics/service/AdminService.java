@@ -8,9 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.TurboMechanics.dto.UserRequestDTO;
 import com.proyecto.TurboMechanics.dto.UserResponseDTO;
+import com.proyecto.TurboMechanics.dto.WorkOrderResponseDTO;
 import com.proyecto.TurboMechanics.entity.Users;
+import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
+import com.proyecto.TurboMechanics.repository.WorkOrderRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 public class AdminService {
  
     private final UsersRepository usersRepository;
+
+    private final WorkOrderRepository workOrderRepository;
  
     /**
      * Obtiene toda la lista de clientes
@@ -47,6 +52,28 @@ public class AdminService {
         }
  
         return mapToDTO(user);
+    }
+
+    /**
+     * Consultar historial de servicios por cliente
+     * @param identification identification del cliente
+     * @return retorna el historial de servicio en base a al identificacion
+     */
+    @Transactional(readOnly = true)
+    public List<WorkOrderResponseDTO> getServiceHistoryByClient(Integer identification) {
+
+        findClient(identification);
+
+        List<WorkOrder> orders = workOrderRepository
+                .findByClientidentification(identification);
+
+        if (orders.isEmpty()) {
+            throw new RuntimeException("El cliente con identificación " + identification + " no tiene historial de servicios");
+        }
+
+        return orders.stream()
+                .map(this::mapToHistoryDTO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -114,6 +141,34 @@ public class AdminService {
         dto.setPhone(user.getPhone());
         dto.setEmail(user.getEmail());
         dto.setRolId(user.getRolId());
+        return dto;
+    }
+
+    private WorkOrderResponseDTO mapToHistoryDTO(WorkOrder order) {
+        WorkOrderResponseDTO dto = new WorkOrderResponseDTO();
+
+        dto.setId(order.getId());
+        dto.setNumberorder(order.getNumberorder());
+        dto.setClientname(order.getClientname());
+        dto.setClientidentification(order.getClientidentification());
+        dto.setClientphone(order.getClientphone());
+        dto.setVehicleplate(order.getVehicleplate());
+        dto.setVehiclebrand(order.getVehiclebrand());
+        dto.setVehiclemodel(order.getVehiclemodel());
+        dto.setVehicleyear(order.getVehicleyear());
+        dto.setVehiclecolor(order.getVehiclecolor());
+        dto.setFailuresreported(order.getFailuresreported());
+        dto.setDateentry(order.getDateentry());
+        dto.setDateestimateddelivery(order.getDateestimateddelivery());
+        dto.setLevelfuel(order.getLevelfuel());
+        dto.setStatescratches(order.getStatescratches());
+        dto.setStatedents(order.getStatedents());
+        dto.setAccessoriesobservations(order.getAccessoriesobservations());
+        dto.setStateorder(order.getStateorder());
+        dto.setPriority(order.getPriority());
+        dto.setCreatedBy(order.getCreatedBy());
+        dto.setDatecreation(order.getDatecreation());
+
         return dto;
     }
 }

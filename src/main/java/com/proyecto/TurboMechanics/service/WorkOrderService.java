@@ -107,7 +107,7 @@ public class WorkOrderService {
      * @return Lista de WorkOrderResponseDTO con los datos de las órdenes de trabajo que coinciden con la identificación, o una lista vacía si no se encuentran coincidencias
      */
     @Transactional(readOnly = true)
-    public List<WorkOrderResponseDTO> listByClient(String identificacion) {
+    public List<WorkOrderResponseDTO> listByClient(Integer identificacion) {
         return ordenTrabajoRepository.findByClientidentification(identificacion)
                 .stream().map(this::toResponse).toList();
     }
