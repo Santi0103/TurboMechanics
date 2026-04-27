@@ -114,7 +114,7 @@ public class WorkOrderController {
      */
     @GetMapping("/client/{clientidentification}")
     @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
-    public ResponseEntity<List<WorkOrderResponseDTO>> listByClient(@PathVariable String clientidentification) {
+    public ResponseEntity<List<WorkOrderResponseDTO>> listByClient(@PathVariable Integer clientidentification) {
         try {
             List<WorkOrderResponseDTO> response = ordenTrabajoService.listByClient(clientidentification);
             return ResponseEntity.ok(response);

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.proyecto.TurboMechanics.dto.MessageResponseDTO;
 import com.proyecto.TurboMechanics.dto.UserRequestDTO;
 import com.proyecto.TurboMechanics.dto.UserResponseDTO;
+import com.proyecto.TurboMechanics.dto.WorkOrderResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.AdminService;
@@ -41,6 +42,7 @@ public class AdminController {
             List<UserResponseDTO> clients = adminService.getAllClients();
             return ResponseEntity.ok(clients);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -57,12 +59,28 @@ public class AdminController {
             UserResponseDTO client = adminService.getClientByIdentification(identification);
             return ResponseEntity.ok(client);
         } catch (RuntimeException e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-
+    
+    /**
+     * Consultar historial de servicios por cliente
+     * @param identification identification del cliente
+     * @return retorna el historial de servicio en base a al identificacion
+     */
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
+    @GetMapping("/users/{identification}/history")
+    public ResponseEntity<List<WorkOrderResponseDTO>> getServiceHistoryByClient(
+            @PathVariable Integer identification) {
+        try {
+            List<WorkOrderResponseDTO> history = adminService.getServiceHistoryByClient(identification);
+            return ResponseEntity.ok(history);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
     /**
      * Actualizar la informacion del cliente
      * @param identification identificacion del cliente
@@ -76,8 +94,7 @@ public class AdminController {
             UserResponseDTO updated = adminService.updateClient(identification, request);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
-            MessageResponseDTO error = new MessageResponseDTO();
-            error.setMessage(e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
@@ -96,6 +113,7 @@ public class AdminController {
             response.setMessage("Cliente Eliminado Correctamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             MessageResponseDTO error = new MessageResponseDTO();
             error.setMessage(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

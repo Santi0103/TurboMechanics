@@ -15,7 +15,7 @@ public class Users {
     private Long id;
 
     /**nombre del cliente */
-    @NotBlank(message = "the name is required")
+    @NotBlank(message = "El nombre es obligatorio")
     @Column(name = "nombre")
     private String username;
 
