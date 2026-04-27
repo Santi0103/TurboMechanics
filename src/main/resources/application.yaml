@@ -5,12 +5,12 @@ spring:
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-    password: 
+    password: Jn190424
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate: 
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -19,8 +19,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: santimosquerav@gmail.com       # Cambiar por el correo del taller
-    password: santiago0103           # Contraseña de aplicación de Gmail
+    username: juanjosemunozgarcia745@gmail.com      # Cambiar por el correo del taller
+    password: eqku buvf ypdq ugtq           # Contraseña de aplicación de Gmail
     properties:
       mail:
         smtp:
