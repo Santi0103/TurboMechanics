@@ -16,7 +16,7 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
 
     List<WorkOrder> findByVehicleplateIgnoreCase(String vehicleplate);
 
-    List<WorkOrder> findByClientidentification(Integer clientidentification);
+    List<WorkOrder> findByClientidentification(String clientidentification);
 
     List<WorkOrder> findByStateorder(WorkOrder.StateOrder stateorder);
 

@@ -88,7 +88,7 @@ public class AuthService {
 
         response.setMessage("inicio de sesion correctamente");
         response.setJwt(jwt);
-
+        response.setRolId(userFound.getRolId());
         return response;
     }
 
