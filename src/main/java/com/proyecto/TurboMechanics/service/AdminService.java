@@ -65,7 +65,7 @@ public class AdminService {
         findClient(identification);
 
         List<WorkOrder> orders = workOrderRepository
-                .findByClientidentification(identification);
+                .findByClientidentification(String.valueOf(identification));
 
         if (orders.isEmpty()) {
             throw new RuntimeException("El cliente con identificación " + identification + " no tiene historial de servicios");
