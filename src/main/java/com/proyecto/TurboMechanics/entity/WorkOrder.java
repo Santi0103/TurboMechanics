@@ -101,6 +101,15 @@ public class WorkOrder {
     private LocalDateTime datecreation;
 
     /** Método que se ejecuta antes de persistir la entidad */
+
+    /** El motivo de cancelación */
+    @Column(name = "motivo_cancelacion", columnDefinition = "TEXT")
+    private String cancellationreason;
+
+    /** La fecha de cancelación */
+    @Column(name = "fecha_cancelacion")
+    private LocalDateTime cancellationdate;
+
     @PrePersist
     protected void onCreate() {
         if (datecreation == null) datecreation = LocalDateTime.now();
