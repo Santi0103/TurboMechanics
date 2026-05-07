@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import com.proyecto.TurboMechanics.dto.CancelWorkOrderRequestDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderRequestDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderResponseDTO;
+import com.proyecto.TurboMechanics.dto.WorkOrderUpdateRequestDTO;
 import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.repository.WorkOrderRepository;
 
@@ -124,6 +126,71 @@ public class WorkOrderService {
     }
 
     /**
+     * Actualiza los datos de una orden de trabajo antes de iniciar el servicio (HU 3.3).
+     * Solo se permiten modificaciones si la orden está en estado RECIBIDO.
+     * @param id El ID de la orden a actualizar
+     * @param request DTO con los nuevos datos de la orden
+     * @return WorkOrderResponseDTO con los datos actualizados
+     */
+    @Transactional
+    public WorkOrderResponseDTO update(Long id, @Valid WorkOrderUpdateRequestDTO request) {
+        WorkOrder orden = ordenTrabajoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + id));
+
+        if (orden.getStateorder() != WorkOrder.StateOrder.RECIBIDO) {
+            throw new IllegalStateException(
+                    "No es posible modificar la orden. El servicio ya ha iniciado o la orden fue cancelada.");
+        }
+
+        orden.setClientname(request.getClientname());
+        orden.setClientidentification(request.getClientidentification());
+        orden.setClientphone(request.getClientphone());
+        orden.setVehicleplate(request.getVehicleplate().toUpperCase().trim());
+        orden.setVehiclebrand(request.getVehiclebrand());
+        orden.setVehiclemodel(request.getVehiclemodel());
+        orden.setVehicleyear(request.getVehicleyear());
+        orden.setVehiclecolor(request.getVehiclecolor());
+        orden.setFailuresreported(request.getFailuresreported());
+        orden.setDateestimateddelivery(request.getDateestimateddelivery());
+        orden.setLevelfuel(request.getLevelfuel());
+        orden.setStatescratches(request.getStatescratches());
+        orden.setStatedents(request.getStatedents());
+        orden.setAccessoriesobservations(request.getAccessoriesobservations());
+        if (request.getPriority() != null) {
+            orden.setPriority(request.getPriority());
+        }
+
+        WorkOrder guardada = ordenTrabajoRepository.save(orden);
+        return toResponse(guardada);
+    }
+
+    /**
+     * Cancela una orden de trabajo antes de iniciar el servicio (HU 3.4).
+     * Solo el administrador puede cancelar; la orden debe estar en estado RECIBIDO.
+     * Registra la fecha y motivo de cancelación y mantiene el historial.
+     * @param id El ID de la orden a cancelar
+     * @param request DTO con el motivo de la cancelación
+     * @return WorkOrderResponseDTO con el estado actualizado a CANCELADO
+     */
+    @Transactional
+    public WorkOrderResponseDTO cancel(Long id, @Valid CancelWorkOrderRequestDTO request) {
+        WorkOrder orden = ordenTrabajoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + id));
+
+        if (orden.getStateorder() != WorkOrder.StateOrder.RECIBIDO) {
+            throw new IllegalStateException(
+                    "Solo se pueden cancelar órdenes en estado RECIBIDO. Estado actual: " + orden.getStateorder());
+        }
+
+        orden.setStateorder(WorkOrder.StateOrder.CANCELADO);
+        orden.setCancellationreason(request.getCancellationreason());
+        orden.setCancellationdate(LocalDateTime.now());
+
+        WorkOrder guardada = ordenTrabajoRepository.save(orden);
+        return toResponse(guardada);
+    }
+
+    /**
      * Genera un número de orden único en formato "OT-AAAA-NNNN", donde "AAAA" es el año actual y "NNNN" es un número secuencial que se reinicia cada año. El método verifica que el número generado no exista ya en la base de datos, incrementando el número secuencial hasta encontrar uno disponible.
      * @return Un número de orden único para la nueva orden de trabajo
      */
@@ -166,6 +233,8 @@ public class WorkOrderService {
         dto.setPriority(o.getPriority());
         dto.setCreatedBy(o.getCreatedBy());
         dto.setDatecreation(o.getDatecreation());
+        dto.setCancellationreason(o.getCancellationreason());
+        dto.setCancellationdate(o.getCancellationdate());
         return dto;
     }
 }

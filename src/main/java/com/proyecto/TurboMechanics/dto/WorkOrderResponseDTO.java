@@ -70,4 +70,10 @@ public class WorkOrderResponseDTO {
 
     /** La fecha de creación de la orden */
     private LocalDateTime datecreation;
+
+    /** El motivo de cancelación */
+    private String cancellationreason;
+
+    /** La fecha de cancelación */
+    private LocalDateTime cancellationdate;
 }
