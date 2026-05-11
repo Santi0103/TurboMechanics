@@ -15,38 +15,36 @@ public class RoleInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        // verifica que el handler sea un método del controller y no cualquier otra cosa
         if (!(handler instanceof HandlerMethod method)) {
-            // if(handler == null || !(handler instanceof HandlerMethod))
-            return true; // Si no es un endpoint no nos importa
+            return true;
         }
 
-        // Busca la anotacion @RequiresRole en el método
         RequiresRole annotation = method.getMethodAnnotation(RequiresRole.class);
 
-        // Si no está en el metodo, la busca en la clase (controller)
         if (annotation == null) {
             annotation = method.getBeanType().getAnnotation(RequiresRole.class);
         }
 
-        // Si no hay anotación, el endpoint es público (no requiere rol)
         if (annotation == null) {
-            return true; // Tampoco nos importa
+            return true;
         }
 
         Object rol = request.getAttribute("rolId");
 
-        if (!(rol instanceof Long rolId)) {
+        // ✅ Fix — acepta Integer y Long que puede devolver el JWT
+        if (rol == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Usuario no autenticado\"}");
-            return false; // bloquear la peticion
+            return false;
         }
 
-        // Verifica si el rol del usuario esta dentro de los roles permitidos
-        boolean hasRole = Arrays.stream(annotation.value()).anyMatch(role -> role.getId() == rolId);
+        Long rolId = ((Number) rol).longValue(); // ✅ convierte sin importar si es Integer o Long
 
-        // Si no tiene permisos, responde 403
+        // ✅ Fix — .equals() en vez de == para comparar objetos Long
+        boolean hasRole = Arrays.stream(annotation.value())
+                .anyMatch(role -> role.getId().equals(rolId));
+
         if (!hasRole) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
@@ -54,7 +52,6 @@ public class RoleInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        // Si pasa todas las validaciones, permite continuar al controller
         return true;
     }
 }
