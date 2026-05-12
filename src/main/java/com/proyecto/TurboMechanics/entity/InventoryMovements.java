@@ -9,6 +9,8 @@ import com.proyecto.TurboMechanics.enums.MovementType;
 @Entity
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "movimientos_inventario")
 public class InventoryMovements {
 
