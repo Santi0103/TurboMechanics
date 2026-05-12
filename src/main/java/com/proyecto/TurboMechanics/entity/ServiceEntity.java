@@ -21,7 +21,7 @@ public class ServiceEntity {
     
     /**nombre del servicio */
     @NotBlank(message = "El nombre es obligatorio")
-    @Column(name = "nombre",nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
     
     /** descripcion del servicio */

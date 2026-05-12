@@ -31,7 +31,6 @@ public class RoleInterceptor implements HandlerInterceptor {
 
         Object rol = request.getAttribute("rolId");
 
-        // ✅ Fix — acepta Integer y Long que puede devolver el JWT
         if (rol == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
@@ -39,9 +38,8 @@ public class RoleInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        Long rolId = ((Number) rol).longValue(); // ✅ convierte sin importar si es Integer o Long
+        Long rolId = ((Number) rol).longValue();
 
-        // ✅ Fix — .equals() en vez de == para comparar objetos Long
         boolean hasRole = Arrays.stream(annotation.value())
                 .anyMatch(role -> role.getId().equals(rolId));
 

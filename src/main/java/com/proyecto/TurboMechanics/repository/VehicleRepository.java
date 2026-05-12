@@ -17,5 +17,5 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     List<Vehicle> findByOwnerIdentification(Integer identification);
 
-    Boolean existsByPlateIgnoreCase(String plate);
+    boolean existsByPlateIgnoreCase(String plate);
 }
