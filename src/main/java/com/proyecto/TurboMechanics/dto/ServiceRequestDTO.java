@@ -7,11 +7,13 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ServiceRequestDTO {
 
     /** nombre del servicio */
