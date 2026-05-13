@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.proyecto.TurboMechanics.dto.PriceRequestDTO;
 import com.proyecto.TurboMechanics.dto.ServiceRequestDTO;
 import com.proyecto.TurboMechanics.dto.ServiceResponseDTO;
-import com.proyecto.TurboMechanics.dto.PriceRequestDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.ServiceService;
@@ -35,12 +35,17 @@ public class ServiceController {
      * @param request ServiceRequestDTO dto que pide los datos
      * @return retorna el registro del servicio creado
      */
+
     @RequiresRole({RolEnum.ADMIN})
     @PostMapping
     public ResponseEntity<ServiceResponseDTO> registerService(@Valid @RequestBody ServiceRequestDTO request) {
         try {
             ServiceResponseDTO response = serviceService.registerService(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(null);
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
