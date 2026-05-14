@@ -24,6 +24,15 @@ public class PayMethodService {
     }
     
     /**
+     * 
+     *Lista todos los metodos de pago
+     * @return Retorna la lista de los metodos de pago
+     */
+    public List<PayMethod> listAll() {
+        return payMethodRepository.findAll();
+    }
+
+    /**
      * crear un nuevo metodo de pago
      * @param method activa el metodo de pago
      * @return retorna el metodo de pago creado

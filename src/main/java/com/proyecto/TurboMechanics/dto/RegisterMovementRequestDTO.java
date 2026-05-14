@@ -24,7 +24,6 @@ public class RegisterMovementRequestDTO {
     private MovementConcept concept;
 
     /** Descripción del movimiento */
-    @NotBlank(message = "La descripción es obligatoria")
     @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
     private String description;
 
@@ -34,12 +33,9 @@ public class RegisterMovementRequestDTO {
     private BigDecimal amount;
 
     /** Id de la factura */
-    @NotNull(message = "El id de la factura es obligatorio")
-    @Positive(message = "El id de la factura debe ser válido")
     private Long billId;
 
     /** Método de pago */
-    @NotNull(message = "El método de pago es obligatorio")
     @Positive(message = "El método de pago debe ser válido")
     private Long payMethod;
 

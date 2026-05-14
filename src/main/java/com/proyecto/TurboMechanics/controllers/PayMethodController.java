@@ -34,7 +34,8 @@ public class PayMethodController {
     @GetMapping
     public ResponseEntity<List<PayMethod>> list() {
         try {
-            return ResponseEntity.status(HttpStatus.OK).body(null);
+            List<PayMethod> payMethods = payMethodService.listAll();
+            return ResponseEntity.status(HttpStatus.OK).body(payMethods);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
