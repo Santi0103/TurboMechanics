@@ -110,17 +110,32 @@ public class WorkOrder {
     @Column(name = "fecha_cancelacion")
     private LocalDateTime cancellationdate;
 
+    /** Id del mecánico asignado a esta orden */
+    @Column(name = "mecanico_asignado_id")
+    private Long assignedMechanicId;
+ 
+    /** Nombre del mecánico asignado (desnormalizado para consultas rápidas) */
+    @Column(name = "mecanico_asignado_nombre", length = 150)
+    private String assignedMechanicName;
+ 
+    /** Fecha y hora en que se realizó la asignación */
+    @Column(name = "fecha_asignacion")
+    private LocalDateTime assignedAt;
+ 
+    /** Usuario que realizó la asignación */
+    @Column(name = "asignado_por", length = 100)
+    private String assignedBy;
+  
     @PrePersist
     protected void onCreate() {
         if (datecreation == null) datecreation = LocalDateTime.now();
-        if (dateentry == null)  dateentry  = LocalDateTime.now();
+        if (dateentry == null)    dateentry    = LocalDateTime.now();
         if (stateorder == null)   stateorder   = StateOrder.RECIBIDO;
         if (priority == null)     priority     = Priority.NORMAL;
     }
-
-    /** Enumeraciones para los campos de la orden de trabajo */                                             
-    public enum LevelFuel { VACIO, UN_CUARTO, MITAD, TRES_CUARTOS, LLENO }
-    public enum StateCondition  { SIN_NOVEDAD, LEVE, MODERADO, SEVERO }
-    public enum StateOrder      { RECIBIDO, EN_DIAGNOSTICO, EN_REPARACION, LISTO, ENTREGADO, CANCELADO }
-    public enum Priority        { BAJA, NORMAL, ALTA, URGENTE }
+ 
+    public enum LevelFuel      { VACIO, UN_CUARTO, MITAD, TRES_CUARTOS, LLENO }
+    public enum StateCondition { SIN_NOVEDAD, LEVE, MODERADO, SEVERO }
+    public enum StateOrder     { RECIBIDO, EN_DIAGNOSTICO, EN_REPARACION, LISTO, ENTREGADO, CANCELADO }
+    public enum Priority       { BAJA, NORMAL, ALTA, URGENTE }
 }

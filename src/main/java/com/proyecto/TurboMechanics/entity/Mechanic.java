@@ -3,11 +3,12 @@ package com.proyecto.TurboMechanics.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import com.proyecto.TurboMechanics.enums.LaborStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
-import com.proyecto.TurboMechanics.enums.LaborStatus;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -61,6 +62,10 @@ public class Mechanic {
     @Column(name = "estado_laboral", nullable = false, length = 20)
     private LaborStatus laborStatus = LaborStatus.ACTIVO;
 
+    /** Capacidad máxima de órdenes activas que puede tener el mecánico */
+    @Column(name = "capacidad_maxima_ordenes")
+    private Integer maxOrderCapacity = 3;
+
     /** Usuario que registró al mecánico */
     @Column(name = "creado_por", length = 100)
     private String createdBy;
@@ -77,10 +82,15 @@ public class Mechanic {
     @Column(name = "actualizado_por", length = 100)
     private String updatedBy;
 
+    /** Historial de ausencias del mecánico */
+    @OneToMany(mappedBy = "mechanic", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<MechanicAbsence> absences = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (laborStatus == null) laborStatus = LaborStatus.ACTIVO;
+        if (maxOrderCapacity == null) maxOrderCapacity = 3;
     }
 
     @PreUpdate
