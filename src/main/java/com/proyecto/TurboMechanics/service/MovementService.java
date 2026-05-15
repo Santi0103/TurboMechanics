@@ -45,9 +45,9 @@ public class MovementService {
         if (request.getBillId() != null) {
 
             bill = billRepository.findById(request.getBillId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Factura no encontrada con id: "
-                    + request.getBillId()));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Factura no encontrada con id: "
+                                    + request.getBillId()));
         }
 
         PayMethod payMethod = null;
@@ -56,27 +56,27 @@ public class MovementService {
 
             payMethod = payMethodRepository.findById(
                     request.getPayMethod())
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Método de pago no encontrado con id: "
-                    + request.getPayMethod()));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Método de pago no encontrado con id: "
+                                    + request.getPayMethod()));
         }
 
         Users user = usersRepository.findById(
                 request.getRegisterByIdentification())
-            .orElseThrow(() -> new EntityNotFoundException(
-                "Usuario no encontrado con id: "
-                + request.getRegisterByIdentification()));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Usuario no encontrado con id: "
+                                + request.getRegisterByIdentification()));
 
         MovementPay movementPay = MovementPay.builder()
-            .type(request.getType())
-            .concept(request.getConcept())
-            .description(request.getDescription())
-            .amount(request.getAmount())
-            .bill(bill)
-            .payMethod(payMethod)
-            .registeredBy(user)
-            .date(LocalDateTime.now())
-            .build();
+                .type(request.getType())
+                .concept(request.getConcept())
+                .description(request.getDescription())
+                .amount(request.getAmount())
+                .bill(bill)
+                .payMethod(payMethod)
+                .registeredBy(user)
+                .date(LocalDateTime.now())
+                .build();
 
         return movementPayRepository.save(movementPay);
     }
@@ -85,7 +85,7 @@ public class MovementService {
      * lista entre fecha
      * 
      * @param start parametro de inicio de fecha
-     * @param end parametro de fin de fecha
+     * @param end   parametro de fin de fecha
      * @return retorna la lista
      */
     public List<MovementPay> listBetween(
@@ -93,5 +93,14 @@ public class MovementService {
             LocalDateTime end) {
 
         return movementPayRepository.findByDateBetween(start, end);
+    }
+
+    /**
+     * Listar todos los movimientos.
+     * 
+     * @return retorna la lista de movimientos
+     */
+    public List<MovementPay> listAll() {
+        return movementPayRepository.findAll();
     }
 }
