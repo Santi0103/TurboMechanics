@@ -1,7 +1,10 @@
 package com.proyecto.TurboMechanics.controllers;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,14 +25,15 @@ import lombok.RequiredArgsConstructor;
 public class MovementController {
 
     private final MovementService movementService;
- 
+
     /**
      * Registrar entrada o salida de dinero/inventario.
+     * 
      * @param request dto para el registro del movimiento
      * @return retorna el registro del movimiento
      */
     @PostMapping
-    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
+    @RequiresRole({ RolEnum.ADMIN, RolEnum.MECANICO })
     public ResponseEntity<MovementPay> register(@Valid @RequestBody RegisterMovementRequestDTO request) {
         try {
             MovementPay movementPay = movementService.register(request);
@@ -37,6 +41,23 @@ public class MovementController {
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }    
+        }
+    }
+
+    /**
+     * Listar todos los movimientos de entrada y salida.
+     * 
+     * @return retorna la lista de movimientos
+     */
+    @GetMapping
+    @RequiresRole({ RolEnum.ADMIN, RolEnum.MECANICO })
+    public ResponseEntity<List<MovementPay>> list() {
+        try {
+            List<MovementPay> movements = movementService.listAll();
+            return ResponseEntity.ok(movements);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 }
