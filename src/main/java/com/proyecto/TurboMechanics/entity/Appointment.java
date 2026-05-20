@@ -28,7 +28,7 @@ public class Appointment {
 
     /** Vehículo asociado a la cita */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehiculo_placa", referencedColumnName = "plate", nullable = false)
+    @JoinColumn(name = "vehiculo_placa", referencedColumnName = "placa", nullable = false)
     private Vehicle vehicle;
 
     /** Fecha de la cita */
