@@ -4,5 +4,7 @@ package com.proyecto.TurboMechanics.enums;
 public enum LaborStatus {
     ACTIVO,
     INACTIVO,
-    SUSPENDIDO
+    SUSPENDIDO,
+    VACACIONES,  
+    LICENCIA
 }
