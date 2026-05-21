@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-
+import com.proyecto.TurboMechanics.enums.UrgencyLevel;
 import java.util.List;
 
 @Service
@@ -182,7 +182,7 @@ public class DiagnosisService {
                 .orElseThrow(() -> new RuntimeException("Diagnóstico no encontrado con id: " + id));
     }
 
-    private WorkOrder.Priority mapUrgencyToPriority(Diagnosis.UrgencyLevel level) {
+    private WorkOrder.Priority mapUrgencyToPriority(UrgencyLevel level) {
         return switch (level) {
             case BAJO    -> WorkOrder.Priority.BAJA;
             case MEDIO   -> WorkOrder.Priority.NORMAL;
