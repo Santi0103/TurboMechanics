@@ -27,8 +27,9 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long> {
     
     List<WorkOrder> findByAssignedMechanicIdOrderByDatecreationDesc(Long mechanicId);
 
-    List<WorkOrder> findByAssignedMechanicIdAndStateorderOrderByDatecreationDesc(
-            Long mechanicId, WorkOrder.StateOrder stateorder);
+    List<WorkOrder> findByAssignedMechanicIdAndStateorderOrderByDatecreationDesc(Long mechanicId, WorkOrder.StateOrder stateorder);
+
+    Optional<WorkOrder> findFirstByVehicleplateIgnoreCaseAndStateorderNotInOrderByDateentryDesc(String vehicleplate, List<WorkOrder.StateOrder> stateorders);
 
     /**
      * Retorna órdenes de un mecánico dentro de un rango de fechas de creación.
