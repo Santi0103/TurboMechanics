@@ -11,16 +11,15 @@ import java.util.List;
 @Repository
 public interface WorkshopRepository extends JpaRepository<Workshop, Long> {
 
-    List<Workshop> findByActiveTrueOrderByNameAsc();
+    List<Workshop> findByActiveTrueAndDeletedAtIsNullOrderByNameAsc();
 
-    List<Workshop> findByCityIgnoreCaseAndActiveTrueOrderByNameAsc(String city);
+    List<Workshop> findByCityIgnoreCaseAndActiveTrueAndDeletedAtIsNullOrderByNameAsc(String city);
 
-    /**
-     * Busca talleres activos dentro de un radio geográfico aproximado (caja delimitadora).
-     * Para mayor precisión en producción, se puede usar PostGIS o la fórmula Haversine.
-     */
+    boolean existsByNameIgnoreCaseAndDeletedAtIsNull(String name);
+
     @Query("SELECT w FROM Workshop w " +
            "WHERE w.active = true " +
+           "AND w.deletedAt IS NULL " +
            "AND w.latitude  BETWEEN :latMin AND :latMax " +
            "AND w.longitude BETWEEN :lngMin AND :lngMax " +
            "ORDER BY w.name ASC")
