@@ -16,6 +16,7 @@ import com.proyecto.TurboMechanics.dto.SendReminderApponitmentRequestDTO;
 import com.proyecto.TurboMechanics.entity.Appointment;
 import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.Vehicle;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.enums.StatusAppointment;
 import com.proyecto.TurboMechanics.repository.AppointmentRepository;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
@@ -134,20 +135,38 @@ public class AppointmentService {
         appointment.setStatus(StatusAppointment.Reprogrammed);
 
         Appointment saved = appointmentRepository.save(appointment);
-        log.info("Cita id={} reprogramada a fecha={} hora={}", appointmentId,
-            request.getNewDate(), request.getNewTime());
+
+        // ── ST-7.3.8 Notificar al cliente sobre la reprogramación ──────────
+        String asunto = "Cita reprogramada – " + request.getNewDate() + " " + request.getNewTime();
+        String cuerpo = String.format(
+            "Estimado/a %s,%n%n" +
+            "Su cita ha sido reprogramada exitosamente en TurboMechanics:%n" +
+            "  Nueva fecha : %s%n" +
+            "  Nueva hora  : %s%n" +
+            "  Vehículo    : %s%n%n" +
+            "Si necesita realizar cambios, comuníquese con nosotros.%n%n" +
+            "Gracias por preferirnos.",
+            appointment.getUsers().getUsername(),
+            request.getNewDate(),
+            request.getNewTime(),
+            appointment.getVehicle().getPlate()
+        );
+        notificationService.SentEmailText(appointment.getUsers().getEmail(), asunto, cuerpo);
+        // ───────────────────────────────────────────────────────────────────
+
+        log.info("Cita id={} reprogramada a fecha={} hora={}. Notificación enviada al cliente.",
+            appointmentId, request.getNewDate(), request.getNewTime());
         return saved;
     }
 
     /**
      * Cancelar la cita y notificar de esta
      * @param appointmentId id de la cita
-     * @param adminEmail correo del administrador
-     * @param mecanicoEmail correo del mecanico
+     * @param reason motivo de cancelación
      * @return retorna la cita cancelada y la notificacion de esta
      */
     @Transactional
-    public Appointment cancel(Long appointmentId, String adminEmail, String mecanicoEmail) {
+    public Appointment cancel(Long appointmentId, String reason) {
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
             .orElseThrow(() -> new EntityNotFoundException(
@@ -158,22 +177,25 @@ public class AppointmentService {
         }
 
         appointment.setStatus(StatusAppointment.Cancelled);
+        appointment.setReason(reason);
         Appointment saved = appointmentRepository.save(appointment);
 
-        // Notificar al administrador y al mecánico
+        List<Users> admins    = usersRepository.findByRolId(3L);
+        List<Users> mecanicos = usersRepository.findByRolId(2L);
+
         String asunto = "Cita cancelada – " + appointment.getDate() + " " + appointment.getTime();
         String cuerpo = String.format(
-            "El cliente %s ha cancelado la cita programada para el %s a las %s.\n" +
-            "Vehículo: %s\nMotivo original: %s",
+            "El client %s ha cancelado la cita programada para el %s a las %s.\n" +
+            "Vehículo: %s\nMotivo de cancelación: %s",
             appointment.getUsers().getUsername(),
             appointment.getDate(),
             appointment.getTime(),
             appointment.getVehicle().getPlate(),
-            appointment.getReason()
+            reason
         );
 
-        notificationService.SentEmailText(adminEmail, asunto, cuerpo);
-        notificationService.SentEmailText(mecanicoEmail, asunto, cuerpo);
+        admins.forEach(a  -> notificationService.SentEmailText(a.getEmail(), asunto, cuerpo));
+        mecanicos.forEach(m -> notificationService.SentEmailText(m.getEmail(), asunto, cuerpo));
 
         log.info("Cita id={} cancelada. Notificaciones enviadas.", appointmentId);
         return saved;
