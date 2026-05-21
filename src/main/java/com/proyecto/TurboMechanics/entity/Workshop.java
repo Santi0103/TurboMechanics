@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -63,13 +62,38 @@ public class Workshop {
     @Column(name = "activo", nullable = false)
     private Boolean active = true;
 
+    /** Usuario que registró el taller */
+    @Column(name = "creado_por", length = 100)
+    private String createdBy;
+
     /** Fecha de creación del registro */
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    /** Usuario que realizó la última actualización */
+    @Column(name = "actualizado_por", length = 100)
+    private String updatedBy;
+
+    /** Fecha de la última actualización */
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime updatedAt;
+
+    /** Usuario que eliminó el taller (borrado lógico) */
+    @Column(name = "eliminado_por", length = 100)
+    private String deletedBy;
+
+    /** Fecha de eliminación lógica */
+    @Column(name = "fecha_eliminacion")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (active == null)    active    = true;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
