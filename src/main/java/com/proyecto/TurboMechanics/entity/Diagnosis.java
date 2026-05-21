@@ -2,7 +2,7 @@ package com.proyecto.TurboMechanics.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
+import com.proyecto.TurboMechanics.enums.UrgencyLevel;
 import java.time.LocalDateTime;
 
 @Entity
@@ -74,7 +74,4 @@ public class Diagnosis {
     protected void onUpdate() {
         updatedate = LocalDateTime.now();
     }
-
-    /** Niveles de urgencia del diagnóstico */
-    public enum UrgencyLevel { BAJO, MEDIO, ALTO, CRITICO }
 }

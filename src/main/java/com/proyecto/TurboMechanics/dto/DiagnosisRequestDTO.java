@@ -1,5 +1,6 @@
 package com.proyecto.TurboMechanics.dto;
 
+import com.proyecto.TurboMechanics.enums.UrgencyLevel;
 import com.proyecto.TurboMechanics.entity.Diagnosis;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,7 +36,7 @@ public class DiagnosisRequestDTO {
      * Obligatorio.
      */
     @NotNull(message = "El nivel de urgencia es obligatorio")
-    private Diagnosis.UrgencyLevel urgencylevel;
+    private UrgencyLevel urgencylevel;
 
     /** Usuario que registra el diagnóstico */
     private String registeredby;

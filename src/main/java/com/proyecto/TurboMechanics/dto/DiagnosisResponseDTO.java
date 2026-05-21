@@ -1,8 +1,7 @@
 package com.proyecto.TurboMechanics.dto;
 
-import com.proyecto.TurboMechanics.entity.Diagnosis;
 import lombok.Data;
-
+import com.proyecto.TurboMechanics.enums.UrgencyLevel;
 import java.time.LocalDateTime;
 
 @Data
@@ -27,7 +26,7 @@ public class DiagnosisResponseDTO {
     private String mechanicobservations;
 
     /** Nivel de urgencia del servicio (criterio 4) */
-    private Diagnosis.UrgencyLevel urgencylevel;
+    private UrgencyLevel urgencylevel;
 
     /** Indica si ya se generó una orden de trabajo desde este diagnóstico (criterio 7) */
     private boolean ordergenerated;
