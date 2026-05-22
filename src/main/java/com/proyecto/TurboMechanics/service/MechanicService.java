@@ -217,6 +217,43 @@ public class MechanicService {
      * @return datos de la orden con la asignación registrada
      */
     @Transactional
+    /**
+     * HU 6.7 — Retorna la disponibilidad de todos los mecánicos ACTIVOS.
+     * Para cada mecánico indica cuántas órdenes activas tiene y si puede recibir más.
+     */
+    public List<MechanicAvailabilityDTO> getMechanicAvailability() {
+        List<Mechanic> activeMechanics = mechanicRepository.findByLaborStatus(LaborStatus.ACTIVO);
+        return activeMechanics.stream().map(m -> {
+            long activeCount = workOrderRepository.countActiveOrdersByMechanic(m.getId());
+            int maxCap = m.getMaxOrderCapacity() != null ? m.getMaxOrderCapacity() : 3;
+            return new MechanicAvailabilityDTO(
+                    m.getId(),
+                    m.getName(),
+                    m.getDocument(),
+                    m.getPosition(),
+                    m.getLaborStatus().name(),
+                    maxCap,
+                    activeCount,
+                    activeCount < maxCap
+            );
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * HU 6.7 — Quita la asignación de mecánico de una orden.
+     */
+    @Transactional
+    public WorkOrderResponseDTO unassignOrderFromMechanic(Long orderId, String updatedBy) {
+        WorkOrder order = workOrderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Orden no encontrada con id: " + orderId));
+        order.setAssignedMechanicId(null);
+        order.setAssignedMechanicName(null);
+        order.setAssignedAt(null);
+        order.setAssignedBy(updatedBy);
+        workOrderRepository.save(order);
+        return mapOrderToDTO(order);
+    }
+
     public WorkOrderResponseDTO assignOrderToMechanic(
             Long orderId, Long mechanicDocument, String assignedBy) {
 
@@ -402,7 +439,17 @@ public class MechanicService {
         dto.setDatecreation(order.getDatecreation());
         dto.setCancellationreason(order.getCancellationreason());
         dto.setCancellationdate(order.getCancellationdate());
+        // HU 6.7 — mecánico asignado
+        dto.setAssignedMechanicName(order.getAssignedMechanicName());
+        dto.setAssignedMechanicDocument(order.getAssignedMechanicId() != null
+                ? findMechanicDocumentById(order.getAssignedMechanicId()) : null);
         return dto;
+    }
+
+    private Long findMechanicDocumentById(Long mechanicId) {
+        return mechanicRepository.findById(mechanicId)
+                .map(Mechanic::getDocument)
+                .orElse(null);
     }
 
     private MechanicAbsenceResponseDTO mapAbsenceToDTO(MechanicAbsence absence) {

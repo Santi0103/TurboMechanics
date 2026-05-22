@@ -186,6 +186,41 @@ public class MechanicController {
     }
  
     /**
+     * HU 6.7 — Retorna la disponibilidad de mecánicos ACTIVOS para asignación de órdenes.
+     * Incluye cuántas órdenes activas tiene cada uno y si puede recibir más.
+     */
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
+    @GetMapping("/disponibilidad")
+    public ResponseEntity<?> getMechanicAvailability() {
+        try {
+            return ResponseEntity.ok(mechanicService.getMechanicAvailability());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponseDTO("Error al consultar disponibilidad de mecánicos"));
+        }
+    }
+
+    /**
+     * HU 6.7 — Quita la asignación de mecánico de una orden de trabajo.
+     */
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
+    @DeleteMapping("/ordenes/{orderId}/desasignar")
+    public ResponseEntity<?> unassignOrder(
+            @PathVariable Long orderId,
+            HttpServletRequest httpRequest) {
+        try {
+            WorkOrderResponseDTO response = mechanicService.unassignOrderFromMechanic(
+                    orderId, extractUsername(httpRequest));
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponseDTO(e.getMessage()));
+        }
+    }
+
+    /**
      * asigna una orden de trabajo a un mecánico
      * @param orderId id de la orden a asignar
      * @param request documento del mecánico al que se asignará la orden
