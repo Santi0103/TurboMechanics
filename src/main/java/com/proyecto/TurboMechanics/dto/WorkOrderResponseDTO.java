@@ -76,4 +76,12 @@ public class WorkOrderResponseDTO {
 
     /** La fecha de cancelación */
     private LocalDateTime cancellationdate;
+
+    // ── HU 6.7 — Asignación de mecánico ──────────────────────────────────────
+
+    /** Nombre del mecánico asignado a esta orden (null si no tiene) */
+    private String assignedMechanicName;
+
+    /** Documento del mecánico asignado (null si no tiene) */
+    private Long assignedMechanicDocument;
 }
