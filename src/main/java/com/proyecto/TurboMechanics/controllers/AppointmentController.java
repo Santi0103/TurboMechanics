@@ -106,9 +106,9 @@ public class AppointmentController {
      */
     @PatchMapping("/{id}/cancel")
     @RequiresRole({ RolEnum.CLIENTE })
-    public ResponseEntity<Appointment> cancel(@PathVariable Long id, @RequestParam String adminEmail, @RequestParam String mecanicoEmail) {
+    public ResponseEntity<Appointment> cancel(@PathVariable Long id, @RequestParam String reason) {
         try {
-            Appointment appointment = appointmentService.cancel(id, adminEmail, mecanicoEmail);
+            Appointment appointment = appointmentService.cancel(id, reason);
             return ResponseEntity.status(HttpStatus.OK).body(appointment);
         } catch (RuntimeException e) {
             e.printStackTrace();

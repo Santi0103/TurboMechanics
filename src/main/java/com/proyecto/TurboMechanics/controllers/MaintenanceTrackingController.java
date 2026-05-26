@@ -14,6 +14,7 @@ import com.proyecto.TurboMechanics.dto.UpdateMaintenanceTimeRequestDTO;
 import com.proyecto.TurboMechanics.entity.Issue;
 import com.proyecto.TurboMechanics.entity.MaintenanceProgress;
 import com.proyecto.TurboMechanics.entity.NotificationConsent;
+import com.proyecto.TurboMechanics.entity.NotificationLog;
 import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
@@ -21,7 +22,6 @@ import com.proyecto.TurboMechanics.service.MaintenanceTrackingService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 
 @RestController
 @RequestMapping("/maintenance")
@@ -65,9 +65,26 @@ public class MaintenanceTrackingController {
     }
 
     /**
+     * Historial de todas las ordenes de un vehiculo por placa
+     * @param plate placa del vehiculo
+     * @return retorna todas las ordenes incluyendo entregadas y canceladas
+     */
+    @GetMapping("/history")
+    @RequiresRole({RolEnum.CLIENTE})
+    public ResponseEntity<List<MaintenanceStatusResponseDTO>> history(@RequestParam String plate) {
+        try {
+            List<MaintenanceStatusResponseDTO> response = maintenanceTrackingService.getHistoryByPlate(plate);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    /**
      * Actualizar tiempo estimado de entrega
      * @param request dto para actualizar la fecha estimada
-     * @return retorna la nueva fecha 
+     * @return retorna la nueva fecha
      */
     @PutMapping("/time")
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
@@ -82,9 +99,9 @@ public class MaintenanceTrackingController {
     }
 
     /**
-     * Notificar el cambio del estado al cleinte
+     * Notificar el cambio del estado al cliente
      * @param workOrderId id de la orden de trabajo
-     * @return retorna la notifiacicon del cmabio de estado
+     * @return retorna la notificacion del cambio de estado
      */
     @PostMapping("/{workOrderId}/notify")
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
@@ -100,7 +117,7 @@ public class MaintenanceTrackingController {
 
     /**
      * Registrar inconveniente
-     * @param request dto para el registro del invonveniente
+     * @param request dto para el registro del inconveniente
      * @return retorna el inconveniente registrado
      */
     @PostMapping("/issues")
@@ -168,13 +185,30 @@ public class MaintenanceTrackingController {
     /**
      * Consultar avances de una orden
      * @param workOrderId id de la orden de trabajo
-     * @return retrona los avances
+     * @return retorna los avances
      */
     @GetMapping("/{workOrderId}/progress")
     public ResponseEntity<List<MaintenanceProgress>> getProgress(@PathVariable Long workOrderId) {
         try {
             List<MaintenanceProgress> maintenanceProgresses = maintenanceTrackingService.getProgressByWorkOrder(workOrderId);
             return ResponseEntity.status(HttpStatus.OK).body(maintenanceProgresses);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    /**
+     * Historial de notificaciones de una orden
+     * @param workOrderId id de la orden de trabajo
+     * @return retorna el historial de notificaciones enviadas al cliente
+     */
+    @GetMapping("/{workOrderId}/notifications")
+    @RequiresRole({RolEnum.CLIENTE})
+    public ResponseEntity<List<NotificationLog>> getNotifications(@PathVariable Long workOrderId) {
+        try {
+            List<NotificationLog> logs = maintenanceTrackingService.getNotificationsByWorkOrder(workOrderId);
+            return ResponseEntity.status(HttpStatus.OK).body(logs);
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

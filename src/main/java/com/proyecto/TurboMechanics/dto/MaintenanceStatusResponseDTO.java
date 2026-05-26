@@ -14,22 +14,29 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MaintenanceStatusResponseDTO {
 
+
+    /** ID numérico de la orden de trabajo */
+    private Long workOrderId;
+    
     /** Número de orden de trabajo */
     private String numberOrder;
 
-    /**estado de la orden, RECIBIDO | EN_DIAGNOSTICO | EN_REPARACION | LISTO | ENTREGADO | CANCELADO*/
+    /**
+     * estado de la orden, RECIBIDO | EN_DIAGNOSTICO | EN_REPARACION | LISTO |
+     * ENTREGADO | CANCELADO
+     */
     private StateOrder stateOrder;
 
-    /**Nombre del mecánico asignado.*/
+    /** Nombre del mecánico asignado. */
     private String assignedMechanicName;
 
     /** descripción del servicio solicitado */
     private String serviceDescription;
 
-    /**Fecha y hora de ingreso del vehículo */
+    /** Fecha y hora de ingreso del vehículo */
     private LocalDateTime dateEntry;
 
-    /** Fecha estimada de entrega.*/
+    /** Fecha estimada de entrega. */
     private LocalDate estimatedDelivery;
 
     /** Marca del vehículo */
