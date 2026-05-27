@@ -1,7 +1,6 @@
 package com.proyecto.TurboMechanics.dto;
 
 import com.proyecto.TurboMechanics.enums.UrgencyLevel;
-import com.proyecto.TurboMechanics.entity.Diagnosis;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

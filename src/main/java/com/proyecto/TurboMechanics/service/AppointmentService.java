@@ -16,7 +16,6 @@ import com.proyecto.TurboMechanics.dto.SendReminderApponitmentRequestDTO;
 import com.proyecto.TurboMechanics.entity.Appointment;
 import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.Vehicle;
-import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.enums.StatusAppointment;
 import com.proyecto.TurboMechanics.repository.AppointmentRepository;
 import com.proyecto.TurboMechanics.repository.UsersRepository;

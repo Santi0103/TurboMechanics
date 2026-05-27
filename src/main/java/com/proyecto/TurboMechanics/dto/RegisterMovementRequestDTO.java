@@ -6,7 +6,6 @@ import com.proyecto.TurboMechanics.enums.MovementConcept;
 import com.proyecto.TurboMechanics.enums.MovementType;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
