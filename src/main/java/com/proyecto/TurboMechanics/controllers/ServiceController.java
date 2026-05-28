@@ -32,11 +32,12 @@ public class ServiceController {
 
     /**
      * registrar servicio en el sistema
+     * 
      * @param request ServiceRequestDTO dto que pide los datos
      * @return retorna el registro del servicio creado
      */
 
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @PostMapping
     public ResponseEntity<ServiceResponseDTO> registerService(@Valid @RequestBody ServiceRequestDTO request) {
         try {
@@ -45,7 +46,7 @@ public class ServiceController {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(null);
+                    .body(null);
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -54,13 +55,15 @@ public class ServiceController {
 
     /**
      * Actualiza el precio del servicio
-     * @param id id del servicio a actualizar el precio
+     * 
+     * @param id      id del servicio a actualizar el precio
      * @param request PriceRequestDTO dto que pide los datos
      * @return retorna la actualizacion del precio
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @PatchMapping("/{id}/price")
-    public ResponseEntity<ServiceResponseDTO> updatePrice(@PathVariable Long id,@Valid @RequestBody PriceRequestDTO request) {
+    public ResponseEntity<ServiceResponseDTO> updatePrice(@PathVariable Long id,
+            @Valid @RequestBody PriceRequestDTO request) {
         try {
             ServiceResponseDTO response = serviceService.updatePrice(id, request);
             return ResponseEntity.ok(response);
@@ -72,9 +75,10 @@ public class ServiceController {
 
     /**
      * Muestra todo el catalogo de servicios
+     * 
      * @return retorna todo el catalogo de servicio
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @GetMapping
     public ResponseEntity<List<ServiceResponseDTO>> viewCatalog() {
         try {
@@ -88,10 +92,11 @@ public class ServiceController {
 
     /**
      * Busca el servicio por id
+     * 
      * @param id id del servicio a buscar
      * @return retorna el servicio que busco
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @GetMapping("/{id}")
     public ResponseEntity<ServiceResponseDTO> findById(@PathVariable Long id) {
         try {
@@ -105,10 +110,11 @@ public class ServiceController {
 
     /**
      * Elimina el servicio por id
+     * 
      * @param id id del servicio para eliminar
      * @return retorna la eliminacion del servicio
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteService(@PathVariable Long id) {
         try {
@@ -122,10 +128,11 @@ public class ServiceController {
 
     /**
      * Cambiar el estado del servicio
+     * 
      * @param id id del servicio
      * @return retorna el estado del servicio nuevo
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({ RolEnum.ADMIN })
     @PatchMapping("/{id}/status")
     public ResponseEntity<ServiceResponseDTO> changeStatus(@PathVariable Long id) {
         try {
@@ -134,6 +141,25 @@ public class ServiceController {
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    /**
+     * Catalogo publico de servicios activos para la pagina principal
+     * 
+     * @return retorna los servicios activos
+     */
+    @GetMapping("/public/servicios")
+    public ResponseEntity<List<ServiceResponseDTO>> publicCatalog() {
+        try {
+            List<ServiceResponseDTO> response = serviceService.viewCatalog()
+                    .stream()
+                    .filter(s -> Boolean.TRUE.equals(s.getActive()))
+                    .collect(java.util.stream.Collectors.toList());
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }

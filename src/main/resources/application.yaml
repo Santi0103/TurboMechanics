@@ -5,7 +5,7 @@ spring:
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-    password: santi0103
+    password: 1127941938
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -36,7 +36,3 @@ security:
     secret-key: QjaJfdfFv7krX863yrVAS87tfaz56rUWcrUzS0ZbqFU= # Genera con openssl rand -base64 32
     token-expiration: 600000 # 10 min expresado en ms
 
-twilio:
-  account-sid: 
-  auth-token: 
-  whatsapp-number: 
