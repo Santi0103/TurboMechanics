@@ -155,14 +155,14 @@ public class EstimateService {
      */
      private String buildHtmlMessage(Estimate p) {
         String approveUrl = frontendUrl
-                + "/estima-confirmation/"
-                + p.getToken()
-                + "?accion=aprobar";
+            + "/estima-confirmation/"
+            + p.getToken()
+            + "/aprobar";
 
         String rejectUrl = frontendUrl
-                + "/estima-confirmation/"
-                + p.getToken()
-                + "?accion=rechazar";
+            + "/estima-confirmation/"
+            + p.getToken()
+            + "/rechazar";
  
         return "<!DOCTYPE html>" +
             "<html lang='es'><head><meta charset='UTF-8'>" +
