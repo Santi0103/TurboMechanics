@@ -44,7 +44,7 @@ public class NotificationService {
      * @param item      asunto
      * @param pdf       archivo PDF
      */
-    public void SentEmail(String addressee, String item, byte[] pdf) {
+    public void SendEmail(String addressee, String item, byte[] pdf) {
         try {
             MimeMessage msg = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
@@ -61,12 +61,33 @@ public class NotificationService {
     }
 
     /**
+     * Enviar presupuesto html
+     * @param addressee destinatario
+     * @param item asunto
+     * @param html html del correo
+     */
+    public void SendEmailHtml(String addressee, String item, String html) {
+        try {
+            MimeMessage msg = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(msg, false, "UTF-8");
+            helper.setTo(addressee);
+            helper.setSubject(item);
+            helper.setText(html, true); 
+            mailSender.send(msg);
+            log.info("Presupuesto HTML enviado por email a {}", addressee);
+        } catch (MessagingException e) {
+            log.error("Error enviando email HTML a {}: {}", addressee, e.getMessage());
+            throw new RuntimeException("No se pudo enviar el correo HTML", e);
+        }
+    }
+
+    /**
      * Enviar mensaje de WhatsApp.
      * 
      * @param phone   número de teléfono
      * @param pdf       archivo PDF
      */
-    public void sendtWhatsapp(String phone, byte[] pdf) {
+    public void sendWhatsapp(String phone, byte[] pdf) {
         try {
             String cleaned = phone.replaceAll("[^0-9]", "");
             if (!cleaned.startsWith("57"))
@@ -93,7 +114,7 @@ public class NotificationService {
      * @param phone   número de teléfono
      * @param menssage mensaje a enviar
      */
-    public void SentWhatsappText(String phone, String menssage) {
+    public void SendWhatsappText(String phone, String menssage) {
         try {
             String cleaned = phone.replaceAll("[^0-9]", "");
             if (!cleaned.startsWith("57"))

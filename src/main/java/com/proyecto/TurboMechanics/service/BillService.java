@@ -150,9 +150,9 @@ public class BillService {
         String item = "Comprobante de pago – " + bill.getNumBill();
 
         if ("EMAIL".equalsIgnoreCase(canal)) {
-            notificationService.SentEmail(bill.getUsers().getEmail(), item, pdf);
+            notificationService.SendEmail(bill.getUsers().getEmail(), item, pdf);
         } else if ("WHATSAPP".equalsIgnoreCase(canal)) {
-            notificationService.sendtWhatsapp(bill.getUsers().getPhone(), pdf);
+            notificationService.sendWhatsapp(bill.getUsers().getPhone(), pdf);
         } else {
             throw new IllegalArgumentException(
                     "Canal no válido: " + canal + ". Use EMAIL o WHATSAPP");

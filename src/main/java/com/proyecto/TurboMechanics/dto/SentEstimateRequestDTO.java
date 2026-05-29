@@ -30,7 +30,7 @@ public class SentEstimateRequestDTO {
      * repuestos, mano de obra, tiempos estimados y costos parciales
      */
     @NotBlank(message = "El detalle del presupuesto es obligatorio")
-    private String detailJson;
+    private String description;
 
     /** total estimado */
     @NotNull(message = "El total estimado es obligatorio")

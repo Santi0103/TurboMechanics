@@ -320,7 +320,7 @@ public class MaintenanceTrackingService {
                 notificationService.SentEmailText(users.getEmail(), subject, body);
             }
             if (channel == NotificationChannel.Whastapp || channel == NotificationChannel.Both) {
-                notificationService.SentWhatsappText(users.getPhone(), body);
+                notificationService.SendWhatsappText(users.getPhone(), body);
             }
 
             NotificationLog logEntry = NotificationLog.builder()

@@ -2,6 +2,7 @@ package com.proyecto.TurboMechanics.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.proyecto.TurboMechanics.enums.StatusEstimate;
 
@@ -36,12 +37,9 @@ public class Estimate {
     @JoinColumn(name = "vehiculo_placa", referencedColumnName = "placa", nullable = false)
     private Vehicle vehicle;
 
-    /**
-     * JSON con el detalle: repuestos, mano de obra,
-     * tiempos estimados y costos parciales
-     */
-    @Column(name = "detalle_json", columnDefinition = "TEXT")
-    private String detailJson;
+    /**descripcion del detalle*/
+    @Column(name = "description")
+    private String description;
 
     /** total estimado del presupuesto */
     @Column(nullable = false, precision = 12, scale = 2)
@@ -57,4 +55,13 @@ public class Estimate {
 
     /** fecha de la respuesta del presupuesto */
     private LocalDateTime dateResponse;
+
+    /** Token único UUID para que el cliente apruebe o rechace el presupuesto */
+    @Column(name = "token", unique = true, nullable = false, length = 36)
+    private String token;
+
+    @PrePersist
+    protected void onCreate() {
+        if (token == null) token = UUID.randomUUID().toString();
+    }
 }

@@ -36,10 +36,27 @@ public class EstimateController {
     */
     @PostMapping
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
-    public ResponseEntity<Estimate> sent(@Valid @RequestBody SentEstimateRequestDTO request) {
+    public ResponseEntity<Estimate> send(@Valid @RequestBody SentEstimateRequestDTO request) {
         try {
-            Estimate estimate = estimateService.sendtEstimate(request);
+            Estimate estimate = estimateService.sendEstimate(request);
             return ResponseEntity.status(HttpStatus.OK).body(estimate);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }   
+
+    /**
+     * el cliente aprueba o rechaza el presupuesto
+     * @param token token del cliente
+     * @param accion accion del cliente
+     * @return retorna una respuesta
+     */
+    @PatchMapping("/response")
+    public ResponseEntity<Estimate> responseToken(@RequestParam String token,@RequestParam String accion) {
+        try {
+            boolean approved = "aprobar".equalsIgnoreCase(accion);
+            return ResponseEntity.ok(estimateService.responseByToken(token, approved));
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -52,7 +69,7 @@ public class EstimateController {
      * @param approved aprobado o no del cliente
      * @return retorna la respuesta del cliente
      */
-    @PatchMapping("/{id}/respuesta")
+    @PatchMapping("/{id}/response")
     public ResponseEntity<Estimate> response(@PathVariable Long id, @RequestParam boolean approved) {
         try {
             Estimate estimate = estimateService.response(id, approved);
@@ -71,7 +88,7 @@ public class EstimateController {
      */
     @GetMapping
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
-    public ResponseEntity<List<Estimate>> listar(@RequestParam Integer identification, @RequestParam(required = false) String plate) {
+    public ResponseEntity<List<Estimate>> list(@RequestParam Integer identification, @RequestParam(required = false) String plate) {
         try {
             List<Estimate> estimate = estimateService.listByClient(identification, plate);
             return ResponseEntity.status(HttpStatus.OK).body(estimate);
