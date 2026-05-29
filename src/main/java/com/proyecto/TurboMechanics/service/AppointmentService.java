@@ -259,7 +259,7 @@ public class AppointmentService {
             notificationService.SentEmailText(
                 appointment.getUsers().getEmail(), asunto, mensaje);
         } else if ("WHATSAPP".equalsIgnoreCase(request.getCanal())) {
-            notificationService.SentWhatsappText(
+            notificationService.SendWhatsappText(
                 appointment.getUsers().getPhone(), mensaje);
         } else {
             throw new IllegalArgumentException(

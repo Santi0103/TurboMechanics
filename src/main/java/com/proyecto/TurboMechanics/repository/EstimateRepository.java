@@ -17,5 +17,7 @@ public interface EstimateRepository extends JpaRepository<Estimate, Long> {
  
     /** Presupuestos de un cliente por documento + placa */
     List<Estimate> findByUsersIdentificationAndVehiclePlate(Integer identification, String plate);
+
+    Optional<Estimate> findByToken(String token);
      
 }
