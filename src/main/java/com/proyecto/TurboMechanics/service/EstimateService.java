@@ -36,7 +36,7 @@ public class EstimateService {
     private final NotificationService notificationService;
 
     /**URL base del fornt para aprobar el presupuesto */
-    @Value("${app.frontend.url:http://localhost:4200}")
+    @Value("${app.frontend.url:http://localhost:4200/estima-confirmation}")
     private String frontendUrl;
 
 
