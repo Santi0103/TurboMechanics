@@ -36,7 +36,7 @@ public class EstimateService {
     private final NotificationService notificationService;
 
     /**URL base del fornt para aprobar el presupuesto */
-    @Value("${app.frontend.url:http://localhost:42007estima-confirmation/{token}}")
+    @Value("${app.frontend.url:http://localhost:4200/estima-confirmation/{token}}")
     private String frontendUrl;
 
 
@@ -76,9 +76,9 @@ public class EstimateService {
         String canal = request.getCanal();
 
         if ("EMAIL".equalsIgnoreCase(canal)) {
-            notificationService.SentEmailText(
+            notificationService.SendEmailHtml(
                     users.getEmail(),
-                    "Presupuesto de servicios – Taller",
+                    "Presupuesto de servicios – Turbo Mechanics",
                     menssage);
         } else if ("WHATSAPP".equalsIgnoreCase(canal)) {
             notificationService.SendWhatsappText(users.getPhone(), buildWhatsappMessage(saved));
