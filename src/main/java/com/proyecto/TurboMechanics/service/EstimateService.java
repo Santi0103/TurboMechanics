@@ -36,7 +36,7 @@ public class EstimateService {
     private final NotificationService notificationService;
 
     /**URL base del fornt para aprobar el presupuesto */
-    @Value("${app.frontend.url:http://localhost:4200/estima-confirmation/{token}}")
+    @Value("${app.frontend.url:http://localhost:4200}")
     private String frontendUrl;
 
 
@@ -154,10 +154,15 @@ public class EstimateService {
      * @return retorna el correo
      */
      private String buildHtmlMessage(Estimate p) {
-        String approveUrl = frontendUrl + "/presupuesto/responder?token="
-            + p.getToken() + "&accion=aprobar";
-        String rejectUrl  = frontendUrl + "/presupuesto/responder?token="
-            + p.getToken() + "&accion=rechazar";
+        String approveUrl = frontendUrl
+                + "/estima-confirmation/"
+                + p.getToken()
+                + "?accion=aprobar";
+
+        String rejectUrl = frontendUrl
+                + "/estima-confirmation/"
+                + p.getToken()
+                + "?accion=rechazar";
  
         return "<!DOCTYPE html>" +
             "<html lang='es'><head><meta charset='UTF-8'>" +
