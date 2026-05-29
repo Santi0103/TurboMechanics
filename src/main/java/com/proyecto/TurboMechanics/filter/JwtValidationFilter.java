@@ -1,4 +1,5 @@
 package com.proyecto.TurboMechanics.filter;
+
 import java.io.IOException;
 
 import org.springframework.stereotype.Component;
@@ -19,10 +20,10 @@ public class JwtValidationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException {
-        
+
         String authHeader = request.getHeader("Authorization");
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Header Authorization is missing in the request\"}");
@@ -31,7 +32,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         try {
-            if(jwtService.isTokenValid(token)){
+            if (jwtService.isTokenValid(token)) {
                 String username = jwtService.extractUsername(token);
                 Long userId = jwtService.extractUserId(token);
                 Long rolId = jwtService.extractRolId(token);
@@ -41,7 +42,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 request.setAttribute("rolId", rolId);
 
                 filterChain.doFilter(request, response);
-            }else{
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"Validation Failed\"}");
@@ -52,14 +53,15 @@ public class JwtValidationFilter extends OncePerRequestFilter {
             response.getWriter().write("{\"error\": \"Validation failed\"}");
         }
     }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
         if (method.equals("OPTIONS")) {
-        return true;
-    }
+            return true;
+        }
         return path.equals("/auth/login") ||
                 path.equals("/auth/register") ||
                 path.equals("/auth/refreshToken") ||
@@ -67,6 +69,8 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 path.equals("/auth/validate-code") ||
                 path.equals("/auth/reset-password") ||
                 path.equals("/admin/catalogo/public/servicios") ||
+                path.startsWith("/presupuestos/response") || 
+                path.startsWith("/presupuestos/publico") || 
                 path.startsWith("/files/");
     }
 }
