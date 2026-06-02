@@ -122,12 +122,6 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-		<!-- Twilio -->
-		<dependency>
-			<groupId>com.twilio.sdk</groupId>
-			<artifactId>twilio</artifactId>
-			<version>9.3.0</version>
-		</dependency>
 
     </dependencies>
 

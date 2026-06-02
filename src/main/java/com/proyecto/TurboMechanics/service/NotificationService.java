@@ -1,20 +1,21 @@
 package com.proyecto.TurboMechanics.service;
 
-import com.twilio.Twilio;
-import com.twilio.rest.api.v2010.account.Message;
-import com.twilio.type.PhoneNumber;
-import org.springframework.beans.factory.annotation.Value;
+import com.proyecto.TurboMechanics.config.WhatsAppConfig;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -22,20 +23,9 @@ public class NotificationService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${twilio.account-sid}")
-    private String accountSid;
+    private final RestTemplate   restTemplate;
 
-    @Value("${twilio.auth-token}")
-    private String authToken;
-
-    @Value("${twilio.whatsapp-number}")
-    private String whatsappNumber;
-
-    @PostConstruct
-    public void initTwilio() {
-        Twilio.init(accountSid, authToken);
-        log.info("Twilio inicializado correctamente");
-    }
+    private final WhatsAppConfig whatsAppConfig;
 
     /**
      * Enviar email.
@@ -82,52 +72,64 @@ public class NotificationService {
     }
 
     /**
-     * Enviar mensaje de WhatsApp.
-     * 
-     * @param phone   número de teléfono
-     * @param pdf       archivo PDF
+     * Enviar PDF por WhatsApp 
+     *
+     * @param phone número del cliente 
+     * @param pdf   bytes del PDF generado por PdfGeneratorService
      */
     public void sendWhatsapp(String phone, byte[] pdf) {
         try {
-            String cleaned = phone.replaceAll("[^0-9]", "");
-            if (!cleaned.startsWith("57"))
-                cleaned = "57" + cleaned;
-            String toNumber = "whatsapp:+" + cleaned;
+            String sessionId = whatsAppConfig.getDefaultSession();
+            String caption   = "🔧 *TurboMechanics* - Su comprobante de pago está listo.\n" +
+                               "Gracias por preferirnos. 🚗";
 
-            Message message = Message.creator(
-                    new PhoneNumber(toNumber),
-                    new PhoneNumber(whatsappNumber),
-                    "🔧 *Turbo Mechanics* - Su comprobante de pago ha sido generado. " +
-                            "Por favor descárguelo desde el portal o solicítelo al taller. " +
-                            "Gracias por preferirnos.")
-                    .create();
-            log.info("WhatsApp enviado a {} - SID: {}", phone, message.getSid());
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("sessionId", sessionId);
+            body.add("to",        normalizePhone(phone));
+            body.add("caption",   caption);
+            body.add("file", new ByteArrayResource(pdf) {
+                @Override public String getFilename() { return "comprobante.pdf"; }
+            });
+
+            HttpHeaders headers = multipartHeaders();
+            restTemplate.postForEntity(
+                whatsAppConfig.getServiceUrl() + "/api/messages/pdf",
+                new HttpEntity<>(body, headers),
+                Map.class
+            );
+            log.info("[WA] Comprobante PDF enviado a {}", phone);
+
         } catch (Exception e) {
-            log.error("Error enviando WhatsApp a {}: {}", phone, e.getMessage());
-            throw new RuntimeException("No se pudo enviar el mensaje de WhatsApp", e);
+            log.error("[WA] Error enviando PDF a {}: {}", phone, e.getMessage());
+            throw new RuntimeException("No se pudo enviar el PDF por WhatsApp", e);
         }
     }
 
     /**
-     * Enviar mensaje de WhatsApp.
-     * 
-     * @param phone   número de teléfono
-     * @param menssage mensaje a enviar
+     * Enviar texto por WhatsApp 
+     *
+     * @param phone   número del cliente
+     * @param message texto del mensaje 
      */
-    public void SendWhatsappText(String phone, String menssage) {
+    public void SendWhatsappText(String phone, String message) {
         try {
-            String cleaned = phone.replaceAll("[^0-9]", "");
-            if (!cleaned.startsWith("57"))
-                cleaned = "57" + cleaned;
-            String toNumber = "whatsapp:+" + cleaned;
+            String sessionId = whatsAppConfig.getDefaultSession();
 
-            Message message = Message.creator(
-                    new PhoneNumber(toNumber),
-                    new PhoneNumber(whatsappNumber),
-                    menssage).create();
-            log.info("WhatsApp enviado a {} - SID: {}", phone, message.getSid());
+            Map<String, String> body = Map.of(
+                "sessionId", sessionId,
+                "to",        normalizePhone(phone),
+                "message",   message
+            );
+
+            restTemplate.postForEntity(
+                whatsAppConfig.getServiceUrl() + "/api/messages/text",
+                new HttpEntity<>(body, jsonHeaders()),
+                Map.class
+            );
+            log.info("[WA] Texto enviado a {}", phone);
+
         } catch (Exception e) {
-            log.error("Error enviando WhatsApp a {}: {}", phone, e.getMessage());
+            log.error("[WA] Error enviando texto a {}: {}", phone, e.getMessage());
             throw new RuntimeException("No se pudo enviar el mensaje de WhatsApp", e);
         }
     }
@@ -152,5 +154,38 @@ public class NotificationService {
             log.error("Error enviando email de presupuesto a {}: {}", addressee, e.getMessage());
             throw new RuntimeException("No se pudo enviar el correo de presupuesto", e);
         }
+    }
+
+    /**
+     * Normaliza un número de teléfono colombiano al formato internacional
+     * @param phone numero de telefono
+     * @return retorna el nuemro con prefijo del pais
+     */
+    private String normalizePhone(String phone) {
+        String clean = phone.replaceAll("[^0-9]", "");
+        if (!clean.startsWith("57")) clean = "57" + clean;
+        return clean;
+    }
+
+    /**
+     * Construye los headers HTTP para peticiones JSON al WhatsApp,
+     * @return retorna los headers y token de servicio
+     */
+    private HttpHeaders jsonHeaders() {
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.APPLICATION_JSON);
+        h.set("x-service-token", whatsAppConfig.getServiceToken());
+        return h;
+    }
+
+    /**
+     * Construye los headers HTTP para peticiones multipart a WhatsApp.
+     * @return retorna headers y token de servicio
+     */
+    private HttpHeaders multipartHeaders() {
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.MULTIPART_FORM_DATA);
+        h.set("x-service-token", whatsAppConfig.getServiceToken());
+        return h;
     }
 }
