@@ -36,11 +36,12 @@ security:
     secret-key: QjaJfdfFv7krX863yrVAS87tfaz56rUWcrUzS0ZbqFU= # Genera con openssl rand -base64 32
     token-expiration: 600000 # 10 min expresado en ms
 
-twilio:
-  account-sid: 
-  auth-token: 
-  whatsapp-number: 
-
+whatsapp:
+  service:
+    url: http://localhost:3001
+    token: turbo_mechanics_2026
+  session:
+    default: admin
 app:
   frontend:
     url: http://localhost:4200
