@@ -11,12 +11,12 @@ import qrcode from 'qrcode';
 import axios from 'axios';
 
 // ── Estado en memoria ─────────────────────────────────────────────────────────
-const sessions  = new Map(); // sessionId → socket
-const qrCodes   = new Map(); // sessionId → qr base64
+const sessions = new Map(); // sessionId → socket
+const qrCodes = new Map(); // sessionId → qr base64
 const statusMap = new Map(); // sessionId → string
 
-const SESSION_DIR  = process.env.SESSION_DIR  || './sessions';
-const SPRING_URL   = process.env.SPRING_BOOT_URL || 'http://localhost:9090';
+const SESSION_DIR = process.env.SESSION_DIR || './sessions';
+const SPRING_URL = process.env.SPRING_BOOT_URL || 'http://localhost:9090';
 
 // ── Helpers internos ──────────────────────────────────────────────────────────
 
@@ -63,14 +63,14 @@ export async function createSession(sessionId) {
   fs.mkdirSync(sessionPath, { recursive: true });
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-  const { version }          = await fetchLatestBaileysVersion();
+  const { version } = await fetchLatestBaileysVersion();
 
   const sock = makeWASocket({
     version,
-    auth:              state,
-    logger:            pino({ level: 'silent' }),
+    auth: state,
+    logger: pino({ level: 'silent' }),
     printQRInTerminal: false,
-    browser:           ['TurboMechanics', 'Chrome', '1.0.0'],
+    browser: ['TurboMechanics', 'Chrome', '1.0.0'],
   });
 
   sessions.set(sessionId, sock);
@@ -97,7 +97,7 @@ export async function createSession(sessionId) {
 
     // Desconexión
     if (connection === 'close') {
-      const code           = new Boom(lastDisconnect?.error)?.output?.statusCode;
+      const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
       const shouldReconnect = code !== DisconnectReason.loggedOut;
 
       console.log(`[${sessionId}] ❌ Desconectado. Código: ${code}`);
@@ -124,18 +124,48 @@ export async function createSession(sessionId) {
     if (type !== 'notify') return;
 
     for (const msg of msgs) {
-      // Ignorar mensajes propios o vacíos
       if (!msg.message || msg.key.fromMe) continue;
 
-      const from    = msg.key.remoteJid;
+      const from = msg.key.remoteJid;
       const msgType = Object.keys(msg.message)[0];
-      const body    = msg.message?.conversation
-                   || msg.message?.extendedTextMessage?.text
-                   || '';
+      const body = (
+        msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text ||
+        ''
+      ).trim();
 
       console.log(`[${sessionId}] 📨 Mensaje de ${from}: "${body}"`);
 
-      // Notificar al backend Spring Boot
+      // ── Detectar respuesta a presupuesto pendiente ──────────────
+      if (pendingEstimates.has(from) && (body === '1' || body === '2')) {
+        const { estimateId } = pendingEstimates.get(from);
+        const approved = body === '1';
+
+        console.log(`[${sessionId}] 📋 Respuesta presupuesto #${estimateId}: ${approved ? 'APROBADO' : 'RECHAZADO'}`);
+
+        // Confirmar al cliente inmediatamente
+        await sock.sendMessage(from, {
+          text: approved
+            ? `✅ *Presupuesto APROBADO*. Gracias ${from}, procederemos con el servicio. 🔧`
+            : `❌ *Presupuesto RECHAZADO*. Lamentamos su decisión. Si tiene dudas, contáctenos.`
+        });
+
+        // Notificar a Spring Boot para actualizar el estado
+        try {
+          await axios.post(
+            `${SPRING_URL}/whatsapp/estimate-response`,
+            { estimateId, approved },
+            { timeout: 5000 }
+          );
+          pendingEstimates.delete(from); // limpiar
+        } catch (e) {
+          console.warn(`Error notificando respuesta a Spring Boot: ${e.message}`);
+        }
+
+        continue; // no procesar como mensaje normal
+      }
+
+      // ── Mensaje normal → notificar a Spring Boot ────────────────
       try {
         await axios.post(
           `${SPRING_URL}/whatsapp/incoming`,
@@ -159,7 +189,7 @@ export async function createSession(sessionId) {
 export function getQR(sessionId) {
   return {
     status: statusMap.get(sessionId) || 'not_found',
-    qr:     qrCodes.get(sessionId)   || null,
+    qr: qrCodes.get(sessionId) || null,
   };
 }
 
@@ -179,7 +209,7 @@ export function getStatus(sessionId) {
 export async function logoutSession(sessionId) {
   const sock = sessions.get(sessionId);
   if (sock) {
-    try { await sock.logout(); } catch (_) {}
+    try { await sock.logout(); } catch (_) { }
     sessions.delete(sessionId);
   }
   statusMap.set(sessionId, 'closed');
@@ -198,7 +228,7 @@ export async function logoutSession(sessionId) {
  */
 export async function sendText(sessionId, to, message) {
   const sock = getSocket(sessionId);
-  const jid  = formatPhone(to);
+  const jid = formatPhone(to);
   await sock.sendMessage(jid, { text: message });
   console.log(`[${sessionId}] 📤 Texto enviado a ${jid}`);
   return { success: true, to: jid };
@@ -214,14 +244,14 @@ export async function sendText(sessionId, to, message) {
  * @param {string} caption   - mensaje que acompaña el archivo
  */
 export async function sendPDF(sessionId, to, filePath, filename, caption = '') {
-  const sock   = getSocket(sessionId);
-  const jid    = formatPhone(to);
+  const sock = getSocket(sessionId);
+  const jid = formatPhone(to);
   const buffer = fs.readFileSync(filePath);
 
   await sock.sendMessage(jid, {
     document: buffer,
-    mimetype:  'application/pdf',
-    fileName:  filename || path.basename(filePath),
+    mimetype: 'application/pdf',
+    fileName: filename || path.basename(filePath),
     caption,
   });
   console.log(`[${sessionId}] 📄 PDF '${filename}' enviado a ${jid}`);
@@ -238,14 +268,14 @@ export async function sendPDF(sessionId, to, filePath, filename, caption = '') {
  * @param {string} caption
  */
 export async function sendExcel(sessionId, to, filePath, filename, caption = '') {
-  const sock   = getSocket(sessionId);
-  const jid    = formatPhone(to);
+  const sock = getSocket(sessionId);
+  const jid = formatPhone(to);
   const buffer = fs.readFileSync(filePath);
 
   await sock.sendMessage(jid, {
     document: buffer,
-    mimetype:  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    fileName:  filename || path.basename(filePath),
+    mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    fileName: filename || path.basename(filePath),
     caption,
   });
   console.log(`[${sessionId}] 📊 Excel '${filename}' enviado a ${jid}`);
@@ -261,11 +291,50 @@ export async function sendExcel(sessionId, to, filePath, filename, caption = '')
  * @param {string} caption
  */
 export async function sendImage(sessionId, to, filePath, caption = '') {
-  const sock   = getSocket(sessionId);
-  const jid    = formatPhone(to);
+  const sock = getSocket(sessionId);
+  const jid = formatPhone(to);
   const buffer = fs.readFileSync(filePath);
 
   await sock.sendMessage(jid, { image: buffer, caption });
   console.log(`[${sessionId}] 🖼️ Imagen enviada a ${jid}`);
+  return { success: true, to: jid };
+}
+
+/**
+ * Envía presupuesto con opciones de aprobar/rechazar.
+ * Guarda en memoria el estimateId asociado al número del cliente
+ * para procesarlo cuando responda.
+ *
+ * @param {string} sessionId
+ * @param {string} to           - teléfono del cliente
+ * @param {string} clientName
+ * @param {string} plate        - placa del vehículo
+ * @param {string} total        - monto total del presupuesto
+ * @param {number} estimateId   - ID del presupuesto en Spring Boot
+ */
+
+// Mapa para recordar qué estimateId espera respuesta de cada número
+export const pendingEstimates = new Map(); // phone → estimateId
+
+export async function sendEstimateWithButtons(
+  sessionId, to, clientName, plate, total, estimateId
+) {
+  const sock = getSocket(sessionId);
+  const jid = formatPhone(to);
+
+  const message =
+    `🔧 *TurboMechanics* - Presupuesto de servicios\n\n` +
+    `Hola *${clientName}*, su presupuesto para el vehículo con placa *${plate}* está listo.\n\n` +
+    `💰 *Total estimado: $${total}*\n\n` +
+    `Por favor responda con:\n` +
+    `*1* ✅ para APROBAR el presupuesto\n` +
+    `*2* ❌ para RECHAZAR el presupuesto`;
+
+  await sock.sendMessage(jid, { text: message });
+
+  // Guardar asociación teléfono → estimateId
+  pendingEstimates.set(jid, { estimateId, sessionId });
+
+  console.log(`[${sessionId}] 💬 Presupuesto #${estimateId} enviado a ${jid}, esperando respuesta...`);
   return { success: true, to: jid };
 }

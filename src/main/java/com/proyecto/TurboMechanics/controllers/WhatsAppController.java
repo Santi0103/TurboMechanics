@@ -5,6 +5,8 @@ import com.proyecto.TurboMechanics.dto.WhatsAppIncomingDTO;
 import com.proyecto.TurboMechanics.dto.WhatsAppSessionResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
+import com.proyecto.TurboMechanics.service.EstimateService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -22,6 +24,9 @@ public class WhatsAppController {
     private final RestTemplate   restTemplate;
 
     private final WhatsAppConfig config;
+
+    private final EstimateService estimateService;
+
 
     /**
      * construye los header http del microservicio
@@ -127,6 +132,32 @@ public class WhatsAppController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Webhook llamado por Node.js cuando el cliente responde
+     */
+    /**
+     * Respuesta del cliente
+     * @param body cuerpo de mensaje
+     * @return retorna la respuesta del cliente
+     */
+    @PostMapping("/estimate-response")
+    public ResponseEntity<Void> estimateResponse(@RequestBody Map<String, Object> body) {
+        try {
+            Long    estimateId = Long.valueOf(body.get("estimateId").toString());
+            boolean approved   = (boolean) body.get("approved");
+
+            estimateService.response(estimateId, approved);
+
+            log.info("[WA] Presupuesto #{} {} por el cliente vía WhatsApp",
+                    estimateId, approved ? "APROBADO" : "RECHAZADO");
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("[WA] Error procesando respuesta de presupuesto: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
     /**
      * Recibe los mensajes entrantes de whatsapp
      * @param dto dto para los mensajes entrantes

@@ -165,4 +165,25 @@ router.post('/messages/image', upload.single('file'), async (req, res) => {
   }
 });
 
+/**
+ * POST /api/messages/estimate
+ * Envía presupuesto con opciones de aprobar/rechazar.
+ * Body JSON: { sessionId, to, clientName, plate, total, estimateId }
+ */
+router.post('/messages/estimate', async (req, res) => {
+  try {
+    const { sessionId, to, clientName, plate, total, estimateId } = req.body;
+    if (!sessionId || !to || !estimateId)
+      return res.status(400).json({ error: 'sessionId, to y estimateId son obligatorios' });
+
+    const result = await sendEstimateWithButtons(
+      sessionId, to, clientName, plate, total, estimateId
+    );
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 export default router;
