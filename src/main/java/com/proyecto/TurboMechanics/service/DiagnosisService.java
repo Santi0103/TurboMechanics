@@ -22,7 +22,7 @@ public class DiagnosisService {
 
     private final DiagnosisRepository diagnosisRepository;
     private final WorkOrderRepository workOrderRepository;
-    private final WorkOrderService    workOrderService;
+    private final WorkOrderService workOrderService;
 
     /**
      * Registra un nuevo diagnóstico técnico asociado a una orden de trabajo.
@@ -63,8 +63,12 @@ public class DiagnosisService {
     }
 
     /**
-     * Actualiza un diagnóstico existente. Solo se pueden actualizar los campos de fallas, observaciones, urgencia y la orden asociada (si se requiere cambiar de orden).
-     * No se puede actualizar un diagnóstico que ya fue utilizado para generar una orden de trabajo.
+     * Actualiza un diagnóstico existente. Solo se pueden actualizar los campos de
+     * fallas, observaciones, urgencia y la orden asociada (si se requiere cambiar
+     * de orden).
+     * No se puede actualizar un diagnóstico que ya fue utilizado para generar una
+     * orden de trabajo.
+     * 
      * @param id      ID del diagnóstico a actualizar
      * @param request DTO con los nuevos datos
      * @return DiagnosisResponseDTO actualizado
@@ -97,8 +101,10 @@ public class DiagnosisService {
 
     /**
      * Lista todos los diagnósticos registrados para una orden de trabajo.
+     * 
      * @param workOrderId ID de la orden de trabajo
-     * @return Lista de DiagnosisResponseDTO ordenada por fecha de registro descendente
+     * @return Lista de DiagnosisResponseDTO ordenada por fecha de registro
+     *         descendente
      */
     @Transactional(readOnly = true)
     public List<DiagnosisResponseDTO> listByWorkOrder(Long workOrderId) {
@@ -111,6 +117,7 @@ public class DiagnosisService {
 
     /**
      * Obtiene un diagnóstico por su ID.
+     * 
      * @param id ID del diagnóstico
      * @return DiagnosisResponseDTO con los datos del diagnóstico
      */
@@ -122,7 +129,8 @@ public class DiagnosisService {
     /**
      * Genera una nueva orden de trabajo a partir del diagnóstico registrado.
      * Marca el diagnóstico como utilizado para evitar duplicados.
-     * La nueva orden hereda los datos del cliente y vehículo, y usa las fallas detectadas
+     * La nueva orden hereda los datos del cliente y vehículo, y usa las fallas
+     * detectadas
      * como fallas reportadas.
      *
      * @param diagnosisId ID del diagnóstico
@@ -138,38 +146,18 @@ public class DiagnosisService {
                     "Ya se generó una orden de trabajo desde este diagnóstico.");
         }
 
-        WorkOrder source = diagnosis.getWorkOrder();
+        WorkOrder order = diagnosis.getWorkOrder();
 
-        // Construir el RequestDTO de la nueva orden a partir del diagnóstico
-        com.proyecto.TurboMechanics.dto.WorkOrderRequestDTO req =
-                new com.proyecto.TurboMechanics.dto.WorkOrderRequestDTO();
-        req.setClientname(source.getClientname());
-        req.setClientidentification(source.getClientidentification());
-        req.setClientphone(source.getClientphone());
-        req.setVehicleplate(source.getVehicleplate());
-        req.setVehiclebrand(source.getVehiclebrand());
-        req.setVehiclemodel(source.getVehiclemodel());
-        req.setVehicleyear(source.getVehicleyear());
-        req.setVehiclecolor(source.getVehiclecolor());
-        // Las fallas reportadas en la nueva orden son las detectadas en el diagnóstico
-        req.setFailuresreported(diagnosis.getDetectedfailures());
-        req.setLevelfuel(source.getLevelfuel());
-        req.setStatescratches(source.getStatescratches());
-        req.setStatedents(source.getStatedents());
-        req.setAccessoriesobservations(
-                "Diagnóstico: " + diagnosis.getMechanicobservations() + "\n" +
-                (source.getAccessoriesobservations() != null ? source.getAccessoriesobservations() : ""));
-        // Mapear urgencia → prioridad
-        req.setPriority(mapUrgencyToPriority(diagnosis.getUrgencylevel()));
-        req.setCreatedBy(createdBy != null ? createdBy : diagnosis.getRegisteredby());
+        if (order.getStateorder() == WorkOrder.StateOrder.RECIBIDO ||
+                order.getStateorder() == WorkOrder.StateOrder.EN_DIAGNOSTICO) {
+            order.setStateorder(WorkOrder.StateOrder.EN_DIAGNOSTICO);
+            workOrderRepository.save(order);
+        }
 
-        WorkOrderResponseDTO newOrder = workOrderService.create(req);
-
-        // Marcar diagnóstico como utilizado
         diagnosis.setOrdergenerated(true);
         diagnosisRepository.save(diagnosis);
 
-        return newOrder;
+        return workOrderService.getById(order.getId());
     }
 
     private WorkOrder findOrder(Long id) {
@@ -180,15 +168,6 @@ public class DiagnosisService {
     private Diagnosis findDiagnosis(Long id) {
         return diagnosisRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Diagnóstico no encontrado con id: " + id));
-    }
-
-    private WorkOrder.Priority mapUrgencyToPriority(UrgencyLevel level) {
-        return switch (level) {
-            case BAJO    -> WorkOrder.Priority.BAJA;
-            case MEDIO   -> WorkOrder.Priority.NORMAL;
-            case ALTO    -> WorkOrder.Priority.ALTA;
-            case CRITICO -> WorkOrder.Priority.URGENTE;
-        };
     }
 
     private DiagnosisResponseDTO toResponse(Diagnosis d) {
