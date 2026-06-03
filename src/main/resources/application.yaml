@@ -42,6 +42,7 @@ whatsapp:
     token: turbo_mechanics_2026
   session:
     default: admin
+    
 app:
   frontend:
     url: http://localhost:4200
