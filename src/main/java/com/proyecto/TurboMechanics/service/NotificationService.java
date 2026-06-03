@@ -15,6 +15,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 @Service
 @RequiredArgsConstructor
@@ -131,6 +132,37 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("[WA] Error enviando texto a {}: {}", phone, e.getMessage());
             throw new RuntimeException("No se pudo enviar el mensaje de WhatsApp", e);
+        }
+    }
+
+    /**
+     * Envía presupuesto por WhatsApp con opciones de aprobar/rechazar.
+     *
+     * @param phone       teléfono del cliente
+     * @param clientName  nombre del cliente
+     * @param plate       placa del vehículo
+     * @param total       monto total del presupuesto
+     * @param estimateId  ID del presupuesto en BD
+     */
+    public void sendEstimateWithButtons(String phone, String clientName,String plate, String total,Long estimateId) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("sessionId",   whatsAppConfig.getDefaultSession());
+            body.put("to",          normalizePhone(phone));
+            body.put("clientName",  clientName);
+            body.put("plate",       plate);
+            body.put("total",       total);
+            body.put("estimateId",  estimateId);
+
+            restTemplate.postForEntity(
+                whatsAppConfig.getServiceUrl() + "/api/messages/estimate",
+                new HttpEntity<>(body, jsonHeaders()),
+                Map.class
+            );
+            log.info("[WA] Presupuesto #{} con botones enviado a {}", estimateId, phone);
+        } catch (Exception e) {
+            log.error("[WA] Error enviando presupuesto con botones a {}: {}", phone, e.getMessage());
+            throw new RuntimeException("No se pudo enviar el presupuesto por WhatsApp", e);
         }
     }
 

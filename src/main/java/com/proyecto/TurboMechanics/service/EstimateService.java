@@ -81,7 +81,13 @@ public class EstimateService {
                     "Presupuesto de servicios – Turbo Mechanics",
                     menssage);
         } else if ("WHATSAPP".equalsIgnoreCase(canal)) {
-            notificationService.SendWhatsappText(users.getPhone(), buildWhatsappMessage(saved));
+            notificationService.sendEstimateWithButtons(
+                users.getPhone(),
+                users.getUsername(),
+                vehiculo.getPlate(),
+                request.getTotalEstimate().toString(),
+                saved.getId()
+            );
         } else {
             throw new IllegalArgumentException("Canal no válido: " + canal + ". Use EMAIL o WHATSAPP");
         }
