@@ -137,7 +137,7 @@ public class WorkOrderController {
      *         un error inesperado
      */
     @GetMapping("/client/{clientidentification}")
-    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN })
+    @RequiresRole({ RolEnum.MECANICO, RolEnum.ADMIN, RolEnum.CLIENTE })
     public ResponseEntity<List<WorkOrderResponseDTO>> listByClient(@PathVariable String clientidentification) {
         try {
             List<WorkOrderResponseDTO> response = ordenTrabajoService.listByClient(clientidentification);
