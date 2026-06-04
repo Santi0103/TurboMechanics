@@ -1,19 +1,28 @@
 package com.proyecto.TurboMechanics.controllers;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.proyecto.TurboMechanics.dto.MessageResponseDTO;
 import com.proyecto.TurboMechanics.dto.ReviewRequestDTO;
 import com.proyecto.TurboMechanics.dto.ReviewResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.ReviewService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
@@ -75,6 +84,23 @@ public class ReviewController {
      * @param ordenar opcional: "fecha" (default), "calificacion_asc", "calificacion_desc"
      * @return 200 OK con la lista de reseñas, o 500 si hay error inesperado al consultar
      */
+    /**
+     * Endpoint PÚBLICO: lista todas las reseñas activas sin requerir autenticación.
+     * Disponible para visitantes que quieran ver opiniones antes de registrarse.
+     */
+    @GetMapping("/public")
+    public ResponseEntity<?> listReviewsPublic(
+            @RequestParam(required = false, defaultValue = "fecha") String ordenar) {
+        try {
+            List<ReviewResponseDTO> response = reviewService.listAll(ordenar);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponseDTO("Error al consultar las reseñas."));
+        }
+    }
+
     @GetMapping
     @RequiresRole({RolEnum.CLIENTE, RolEnum.ADMIN})
     public ResponseEntity<?> listReviews(
