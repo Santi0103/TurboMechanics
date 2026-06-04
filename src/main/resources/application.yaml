@@ -46,3 +46,8 @@ whatsapp:
 app:
   frontend:
     url: http://localhost:4200
+
+mercadopago:
+  access-token: APP_USR-7726278336164374-060415-e160bbde422ec8723d23c5f42247a7b0-3450458282
+  public-key: APP_USR-3fc637bb-f3a6-47bd-8557-afceab72f160      
+  notification-url: https://deface-morphing-flypaper.ngrok-free.dev/payments/webhook  #Cambiar por uno nuevo cada vez que cierre desde el ngrok
