@@ -101,7 +101,7 @@ public class MercadoPagoService {
                 .items(List.of(item))
                 .payer(payer)
                 .backUrls(backUrls)
-                .autoReturn("approved")         
+                //.autoReturn("approved")         
                 .externalReference(externalReference)
                 .notificationUrl(notificationUrl)
                 .statementDescriptor("TurboMechanics")
