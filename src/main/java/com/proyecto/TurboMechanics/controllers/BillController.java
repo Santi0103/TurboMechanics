@@ -117,7 +117,7 @@ public class BillController {
      * @return retorna el historial de facturas
      */
     @GetMapping("/historial")
-    @RequiresRole({ RolEnum.ADMIN })
+    @RequiresRole({ RolEnum.ADMIN, RolEnum.CLIENTE })
     public ResponseEntity<List<Bill>> history(@RequestParam Integer identification,
             @RequestParam(required = false) String plate) {
         try {
