@@ -18,7 +18,9 @@ public class ChatbotController {
     private final ChatbotService chatbotService;
 
     @PostMapping("/message")
-    public ResponseEntity<?> sendMessage(@Valid @RequestBody ChatbotRequestDTO request, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> sendMessage(
+            @Valid @RequestBody ChatbotRequestDTO request,
+            HttpServletRequest httpRequest) {
         try {
             Long rolId = (Long) httpRequest.getAttribute("rolId");
             ChatbotResponseDTO response = chatbotService.chat(request, rolId);

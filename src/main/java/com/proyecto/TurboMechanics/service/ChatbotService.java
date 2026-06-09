@@ -1,14 +1,12 @@
 package com.proyecto.TurboMechanics.service;
 
-
 import com.proyecto.TurboMechanics.dto.ChatbotRequestDTO;
 import com.proyecto.TurboMechanics.dto.ChatbotResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
 import lombok.RequiredArgsConstructor;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -23,10 +21,9 @@ public class ChatbotService {
     private String geminiApiKey;
 
     private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate;
 
     private static final Set<String> BLOCKED_WORDS = Set.of(
         "puta", "puto", "mierda", "coño", "culo", "joder", "hostia", "verga",
@@ -47,19 +44,60 @@ public class ChatbotService {
         }
 
         String systemPrompt = buildSystemPrompt(rolId);
-        Map<String, Object> body = buildGeminiRequest(systemPrompt, userMessage);
 
-        String apiUrl = GEMINI_URL + "?key=" + geminiApiKey;
+        // Gemini recibe el system prompt como primer turno del modelo
+        Map<String, Object> systemPart = Map.of("text", systemPrompt);
+        Map<String, Object> systemContent = Map.of(
+            "role", "model",
+            "parts", List.of(systemPart)
+        );
+
+        Map<String, Object> userPart = Map.of("text", userMessage);
+        Map<String, Object> userContent = Map.of(
+            "role", "user",
+            "parts", List.of(userPart)
+        );
+
+        Map<String, Object> body = Map.of(
+            "contents", List.of(systemContent, userContent)
+        );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
-            String reply = extractTextFromResponse(response.getBody());
-            return new ChatbotResponseDTO(reply, resolveRoleName(rolId));
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                GEMINI_URL + geminiApiKey,
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            Map<String, Object> responseBody = response.getBody();
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> candidates =
+                (List<Map<String, Object>>) responseBody.get("candidates");
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> content =
+                (Map<String, Object>) candidates.get(0).get("content");
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> parts =
+                (List<Map<String, Object>>) content.get("parts");
+
+            String reply = (String) parts.get(0).get("text");
+
+            return new ChatbotResponseDTO(
+                reply != null ? reply : "Sin respuesta.",
+                resolveRoleName(rolId)
+            );
+
         } catch (Exception e) {
+            e.printStackTrace();
             return new ChatbotResponseDTO(
                 "Lo siento, hubo un problema al procesar tu consulta. Por favor intenta de nuevo.",
                 resolveRoleName(rolId)
@@ -113,40 +151,6 @@ public class ChatbotService {
                 Usa un tono amable, sencillo y cercano.
                 """;
         };
-    }
-
-    private Map<String, Object> buildGeminiRequest(String systemPrompt, String userMessage) {
-        Map<String, Object> body = new HashMap<>();
-
-        Map<String, Object> systemInstruction = new HashMap<>();
-        Map<String, Object> systemPart = new HashMap<>();
-        systemPart.put("text", systemPrompt);
-        systemInstruction.put("parts", List.of(systemPart));
-        body.put("systemInstruction", systemInstruction);
-
-        Map<String, Object> userPart = new HashMap<>();
-        userPart.put("text", userMessage);
-        Map<String, Object> userContent = new HashMap<>();
-        userContent.put("role", "user");
-        userContent.put("parts", List.of(userPart));
-        body.put("contents", List.of(userContent));
-
-        Map<String, Object> generationConfig = new HashMap<>();
-        generationConfig.put("temperature", 0.7);
-        generationConfig.put("maxOutputTokens", 512);
-        body.put("generationConfig", generationConfig);
-
-        return body;
-    }
-
-    private String extractTextFromResponse(String responseBody) throws Exception {
-        JsonNode root = objectMapper.readTree(responseBody);
-        return root
-            .path("candidates").get(0)
-            .path("content")
-            .path("parts").get(0)
-            .path("text")
-            .asText("Lo siento, no pude generar una respuesta en este momento.");
     }
 
     private boolean containsBlockedWord(String text) {

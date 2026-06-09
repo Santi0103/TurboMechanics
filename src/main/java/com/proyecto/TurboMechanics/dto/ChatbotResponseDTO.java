@@ -14,7 +14,7 @@ public class ChatbotResponseDTO {
         return reply; 
     }
 
-    public String getRole()  {
+    public String getRole() { 
         return role;  
     }
 }
