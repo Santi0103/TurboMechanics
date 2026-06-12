@@ -17,7 +17,7 @@ public class RegisterRequestDTO {
 
     /** identificacion del cliente */
     @NotNull(message = "Identification is required")
-    private Integer identification; 
+    private Integer identification;
 
     /** telefono del cliente */
     @NotBlank(message = "Phone is required")
@@ -29,8 +29,12 @@ public class RegisterRequestDTO {
     @Email(message = "Email must be valid")
     private String email;
 
+    /** dirección del cliente */
+    @NotBlank(message = "Address is required")
+    private String address;
+
     /** contraseña del cliente */
     @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 6 characters")
+    @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 }
