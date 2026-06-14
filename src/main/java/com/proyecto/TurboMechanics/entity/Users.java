@@ -9,41 +9,46 @@ import lombok.Data;
 @Table(name = "usuarios")
 public class Users {
 
-    /**Id del cliente */
+    /** Id del cliente */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
     private Long id;
 
-    /**nombre del cliente */
+    /** nombre del cliente */
     @NotBlank(message = "El nombre es obligatorio")
     @Column(name = "nombre")
     private String username;
 
-    /**identificacion del cliente */
+    /** identificacion del cliente */
     @NotNull(message = "La cédula es obligatoria")
     @Column(name = "cedula")
     private Integer identification;
 
-    /**telefono del cliente */
+    /** telefono del cliente */
     @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(regexp = "^[0-9]{7,15}$", message = "Teléfono inválido")
     @Column(name = "telefono")
     private String phone;
 
-    /**correo del cliente */
+    /** correo del cliente */
     @NotBlank(message = "El correo es obligatorio")
     @Email(message = "Correo inválido")
     @Column(name = "correo", unique = true)
     private String email;
 
-    /**contraseña del cliente */
+    /** dirección del cliente */
+    @NotBlank(message = "La dirección es obligatoria")
+    @Column(name = "direccion")
+    private String address;
+
+    /** contraseña del cliente */
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "Mínimo 6 caracteres")
+    @Size(min = 8, message = "Mínimo 8 caracteres")
     @Column(name = "contrasena")
     private String password;
 
-    /** rolId del clienet */
+    /** rolId del cliente */
     @NotNull(message = "El rol es obligatorio")
     @Column(name = "rol", nullable = false)
     private Long rolId;

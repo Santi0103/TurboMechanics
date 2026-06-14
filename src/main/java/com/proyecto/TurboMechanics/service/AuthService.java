@@ -27,18 +27,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final UsersRepository usersRepository;
-    
+
     private final JwtService jwtService;
-    
+
     /**
      * Registro del cliente
      * @param request RegisterRequestDTO datos para el registro
      * @return retorna un mensaje de registro exitoso
      */
-   @Transactional
+    @Transactional
     public MessageResponseDTO register(@Valid RegisterRequestDTO request) {
         MessageResponseDTO response = new MessageResponseDTO();
-        response.setMessage("Registrado correctamente");
 
         if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("El email ya se encuentra en uso");
@@ -49,6 +48,7 @@ public class AuthService {
         user.setIdentification(request.getIdentification());
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
+        user.setAddress(request.getAddress());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRolId(RolEnum.CLIENTE.getId());
 
@@ -59,9 +59,9 @@ public class AuthService {
     }
 
     /**
-     * Inicio de sesion 
-     * @param request LoginRequestDTO datos para el incio de sesion
-     * @return retorna mensaje de inicio de seion correctamente
+     * Inicio de sesion
+     * @param request LoginRequestDTO datos para el inicio de sesion
+     * @return retorna mensaje de inicio de sesion correctamente
      */
     public LoginResponseDTO login(LoginRequestDTO request) {
         LoginResponseDTO response = new LoginResponseDTO();
@@ -93,9 +93,9 @@ public class AuthService {
     }
 
     /**
-     * este metodo es para refrescar el token, se le pasa el token actual y se devuelve un nuevo token con una nueva fecha de expiracion
-     * @param token el token actual que se quiere refrescar
-     * @return un nuevo token con una nueva fecha de expiracion
+     * Refresca el token actual devolviendo uno nuevo con fecha de expiración renovada.
+     * @param token el token actual
+     * @return nuevo token con fecha de expiración renovada
      */
     public RefreshTokenResponseDTO refreshToken(String token) {
         String jwt = jwtService.refreshToken(token);
