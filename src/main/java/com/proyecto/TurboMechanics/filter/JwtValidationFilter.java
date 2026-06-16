@@ -73,6 +73,7 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                 path.startsWith("/presupuestos/publico") || 
                 path.startsWith("/files/") ||
                 path.equals("/reviews/public") ||
-                path.equals("/payments/webhook");
+                path.equals("/payments/webhook") ||
+                path.equals("/tienda/repuestos");
     }
 }
