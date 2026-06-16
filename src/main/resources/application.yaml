@@ -5,7 +5,7 @@ spring:
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-    password: 1127941938
+    password: simon092416
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,8 +19,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: juanjosemunozgarcia745@gmail.com     # Cambiar por el correo del taller
-    password: eqku buvf ypdq ugtq            # Contraseña de aplicación de Gmail
+    username: TurboMechanicsTaller@gmail.com
+    password: vvjl okct lprl bomr
     properties:
       mail:
         smtp:
