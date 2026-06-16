@@ -61,7 +61,6 @@ public class PdfGeneratorService {
             Table detailTable = twoColumnTable();
             addRow(detailTable, "N° Factura",  bill.getNumBill());
             addRow(detailTable, "Fecha",       bill.getDate().format(FMT));
-            addRow(detailTable, "Método pago", bill.getPayMethod() != null ? bill.getPayMethod().getName() : "—");
             addRow(detailTable, "Estado",      bill.getStatus().toString());
             addRow(detailTable, "Emitida por", bill.getCreatedBy());
             doc.add(detailTable);

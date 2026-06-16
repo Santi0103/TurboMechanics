@@ -40,11 +40,6 @@ public class Bill {
     @JoinColumn(name = "vehiculo_placa", referencedColumnName = "placa", nullable = false)
     private Vehicle vehicle;
 
-    /** metodo de pago */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "metodo_pago_id")
-    private PayMethod payMethod;
-
     /** fecha de la factura */
     @Column(nullable = false)
     private LocalDate date;

@@ -12,7 +12,6 @@ import com.proyecto.TurboMechanics.dto.CashierResponseDTO;
 import com.proyecto.TurboMechanics.dto.GeneratedBillRequestDTO;
 import com.proyecto.TurboMechanics.entity.Bill;
 import com.proyecto.TurboMechanics.entity.MovementPay;
-import com.proyecto.TurboMechanics.entity.PayMethod;
 import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.Vehicle;
 import com.proyecto.TurboMechanics.entity.WorkOrder;
@@ -20,7 +19,6 @@ import com.proyecto.TurboMechanics.enums.MovementType;
 import com.proyecto.TurboMechanics.enums.StatusBill;
 import com.proyecto.TurboMechanics.repository.BillRepository;
 import com.proyecto.TurboMechanics.repository.MovementPayRepository;
-import com.proyecto.TurboMechanics.repository.PayMethodRepository;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
 import com.proyecto.TurboMechanics.repository.VehicleRepository;
 import com.proyecto.TurboMechanics.repository.WorkOrderRepository;
@@ -37,8 +35,6 @@ public class BillService {
     private final UsersRepository usersRepository;
 
     private final VehicleRepository vehicleRepository;
-
-    private final PayMethodRepository payMethodRepository;
 
     private final WorkOrderRepository workOrderRepository;
 
@@ -69,10 +65,6 @@ public class BillService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Vehículo no encontrado con placa: " + request.getPlate()));
 
-        PayMethod payMethod = payMethodRepository.findById(request.getPayMethodId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Método de pago no encontrado: " + request.getPayMethodId()));
-
         BigDecimal subtotal = request.getSubtotal();
         BigDecimal taxes = subtotal.multiply(BigDecimal.valueOf(0.19));
         BigDecimal total = subtotal.add(taxes);
@@ -82,7 +74,7 @@ public class BillService {
                 .workOrder(workOrder)
                 .users(users)
                 .vehicle(vehicle)
-                .payMethod(payMethod)
+                /**.payMethod(payMethod)*/
                 .date(LocalDate.now())
                 .subtotal(subtotal)
                 .taxes(taxes)
@@ -291,7 +283,6 @@ public class BillService {
                 row.createCell(2).setCellValue(m.getConcept() != null ? m.getConcept().toString() : "");
                 row.createCell(3).setCellValue(m.getDescription() != null ? m.getDescription() : "");
                 row.createCell(4).setCellValue(m.getAmount() != null ? m.getAmount().doubleValue() : 0);
-                row.createCell(5).setCellValue(m.getPayMethod() != null ? m.getPayMethod().getName() : "—");
             }
 
             detail.setColumnWidth(0, 5000);

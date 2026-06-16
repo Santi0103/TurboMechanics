@@ -9,11 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.proyecto.TurboMechanics.dto.RegisterMovementRequestDTO;
 import com.proyecto.TurboMechanics.entity.Bill;
 import com.proyecto.TurboMechanics.entity.MovementPay;
-import com.proyecto.TurboMechanics.entity.PayMethod;
 import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.repository.BillRepository;
 import com.proyecto.TurboMechanics.repository.MovementPayRepository;
-import com.proyecto.TurboMechanics.repository.PayMethodRepository;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -26,8 +24,6 @@ public class MovementService {
     private final MovementPayRepository movementPayRepository;
 
     private final BillRepository billRepository;
-
-    private final PayMethodRepository payMethodRepository;
 
     private final UsersRepository usersRepository;
 
@@ -50,17 +46,6 @@ public class MovementService {
                                     + request.getBillId()));
         }
 
-        PayMethod payMethod = null;
-
-        if (request.getPayMethod() != null) {
-
-            payMethod = payMethodRepository.findById(
-                    request.getPayMethod())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Método de pago no encontrado con id: "
-                                    + request.getPayMethod()));
-        }
-
         Users user = usersRepository.findById(
                 request.getRegisterByIdentification())
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -73,7 +58,6 @@ public class MovementService {
                 .description(request.getDescription())
                 .amount(request.getAmount())
                 .bill(bill)
-                .payMethod(payMethod)
                 .registeredBy(user)
                 .date(LocalDateTime.now())
                 .build();
