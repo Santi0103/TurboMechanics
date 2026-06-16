@@ -44,11 +44,6 @@ public class MovementPay {
     @JoinColumn(name = "factura_id")
     private Bill bill;
 
-    /** método de pago */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "metodo_pago_id")
-    private PayMethod payMethod;
-
     /** usuario que registró */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario")

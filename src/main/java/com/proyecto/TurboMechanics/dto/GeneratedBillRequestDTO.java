@@ -24,10 +24,10 @@ public class GeneratedBillRequestDTO {
     @NotBlank(message = "La placa es obligatoria")
     private String plate;
 
-    /**id del metodo de pago */
+    /**id del metodo de pago
     @NotNull(message = "El método de pago es obligatorio")
     @Positive(message = "El método de pago debe ser válido")
-    private Long payMethodId;
+    private Long payMethodId;*/
 
     /** usuario que creo la factura */
     @NotBlank(message = "El usuario creador es obligatorio")
