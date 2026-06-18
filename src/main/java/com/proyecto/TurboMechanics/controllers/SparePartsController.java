@@ -170,7 +170,7 @@ public class SparePartsController {
      * Reporte de cnatidad critica de repuestos
      * @return retorna una lista de los repuestos con una cantidad critica
      */
-    @RequiresRole({RolEnum.ADMIN})
+    @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
     @GetMapping("/reportes/stock-critico")
     public ResponseEntity<List<CriticalStockResponseDTO>> criticalStockReport() {
         try {
