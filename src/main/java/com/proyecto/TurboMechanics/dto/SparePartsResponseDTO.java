@@ -9,27 +9,15 @@ import lombok.Data;
 @Data
 public class SparePartsResponseDTO {
 
-    /**id de los repuestos */
     private Long id;
-
-    /**nombre del repuesto */
     private String name;
-
-    /** referencia del repuesto */
     private String reference;
-
-    /** stock del repuesto */
     private Integer stock;
-
-    /**stock minimo del repuesto */
     private Integer stockMin;
-
-    /** precio del repuesto */
     private BigDecimal price;
-
-    /**categoria del repuesto */
     private String category;
-
-    /**estado del stock del repuesto */
     private String statusStock;
+
+    /** URL de imagen del repuesto */
+    private String imageUrl;
 }

@@ -31,5 +31,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/files/evidencias/**")
                 .addResourceLocations("file:uploads/evidencias/");
+
+        /**
+         * Expone la carpeta uploads/repuestos/ como recursos estáticos accesibles
+         * en la URL: GET http://localhost:9090/files/repuestos/**
+         *
+         * Permite que el frontend muestre imágenes de repuestos subidas por el admin.
+         */
+        registry.addResourceHandler("/files/repuestos/**")
+                .addResourceLocations("file:uploads/repuestos/");
     }
 }

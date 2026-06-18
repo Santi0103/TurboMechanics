@@ -1,7 +1,15 @@
 package com.proyecto.TurboMechanics.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.stereotype.Service;
 
@@ -46,6 +54,7 @@ public class SparePartsService {
                 .price(request.getPrice())
                 .category(request.getCategory())
                 .stockMin(request.getStockMin() != null ? request.getStockMin() : 5)
+                .imageUrl(request.getImageUrl())
                 .build();
  
         SpareParts save = sparePartsRepository.save(spareParts);
@@ -99,6 +108,10 @@ public class SparePartsService {
                 registerMovements(spareParts, MovementType.Output, Math.abs(sparePartsQuantity), "Ajuste de inventario");
             }
             spareParts.setStock(request.getStock());
+        }
+
+        if (request.getImageUrl() != null) {
+            spareParts.setImageUrl(request.getImageUrl());
         }
  
         return toResponse(sparePartsRepository.save(spareParts));
@@ -196,6 +209,37 @@ public class SparePartsService {
     }
     
     /**
+     * Sube o reemplaza la imagen de un repuesto.
+     *
+     * @param id   identificador del repuesto
+     * @param file archivo de imagen
+     * @return repuesto actualizado con la nueva URL de imagen
+     */
+    @Transactional
+    public SparePartsResponseDTO uploadImage(Long id, MultipartFile file) {
+        SpareParts spareParts = findOrThrow(id);
+        try {
+            Path dir = Paths.get("uploads/repuestos");
+            Files.createDirectories(dir);
+
+            String extension = "";
+            String originalName = file.getOriginalFilename();
+            if (originalName != null && originalName.contains("."))
+                extension = originalName.substring(originalName.lastIndexOf('.'));
+
+            String uniqueName = UUID.randomUUID() + extension;
+            Path dest = dir.resolve(uniqueName);
+            Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
+
+            String imageUrl = "http://localhost:9090/files/repuestos/" + uniqueName;
+            spareParts.setImageUrl(imageUrl);
+            return toResponse(sparePartsRepository.save(spareParts));
+        } catch (IOException e) {
+            throw new RuntimeException("Error al guardar la imagen del repuesto", e);
+        }
+    }
+
+    /**
      * Registra un movimiento de inventario para un repuesto.
      *
      * @param spareParts repuesto al que se le aplica el movimiento
@@ -255,6 +299,7 @@ public class SparePartsService {
                 .price(r.getPrice())
                 .category(r.getCategory())
                 .statusStock(status)
+                .imageUrl(r.getImageUrl())
                 .build();
     }
     
