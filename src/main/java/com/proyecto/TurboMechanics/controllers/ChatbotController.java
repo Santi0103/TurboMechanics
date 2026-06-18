@@ -23,7 +23,8 @@ public class ChatbotController {
             HttpServletRequest httpRequest) {
         try {
             Long rolId = (Long) httpRequest.getAttribute("rolId");
-            ChatbotResponseDTO response = chatbotService.chat(request, rolId);
+            Long userId = (Long) httpRequest.getAttribute("userId");
+            ChatbotResponseDTO response = chatbotService.chat(request, rolId, userId);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
