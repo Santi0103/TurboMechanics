@@ -1,6 +1,5 @@
 package com.proyecto.TurboMechanics.controllers;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -10,15 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import com.proyecto.TurboMechanics.dto.CreatePaymentResponseDTO;
 import com.proyecto.TurboMechanics.dto.SparePartsResponseDTO;
 import com.proyecto.TurboMechanics.dto.TiendaCompraRequestDTO;
-import com.proyecto.TurboMechanics.entity.Bill;
 import com.proyecto.TurboMechanics.entity.SpareParts;
+import com.proyecto.TurboMechanics.entity.SpareSale;
 import com.proyecto.TurboMechanics.enums.RolEnum;
-import com.proyecto.TurboMechanics.enums.StatusBill;
-import com.proyecto.TurboMechanics.repository.BillRepository;
+import com.proyecto.TurboMechanics.enums.SpareSaleStatus;
 import com.proyecto.TurboMechanics.repository.SparePartsRepository;
+import com.proyecto.TurboMechanics.repository.SpareSaleRepository;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.MercadoPagoService;
-import com.proyecto.TurboMechanics.dto.CreatePaymentRequestDTO;
 
 import jakarta.validation.Valid;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,12 +28,11 @@ import lombok.RequiredArgsConstructor;
 public class TiendaController {
 
     private final SparePartsRepository sparePartsRepository;
-    private final BillRepository       billRepository;
+    private final SpareSaleRepository  spareSaleRepository;
     private final MercadoPagoService   mercadoPagoService;
 
     /**
-     * Endpoint PÚBLICO — cualquier visitante puede ver los repuestos disponibles.
-     * No requiere token.
+     * Endpoint público — lista los repuestos disponibles
      */
     @GetMapping("/repuestos")
     public ResponseEntity<List<SparePartsResponseDTO>> listarRepuestos() {
@@ -63,38 +60,46 @@ public class TiendaController {
     }
 
     /**
-     * Endpoint PROTEGIDO — solo clientes, mecánicos y admins logueados pueden comprar.
-     * Crea una factura de repuesto y la referencia de pago en MercadoPago.
+     * Endpoint protegido — compra un repuesto, descuenta stock y registra la venta
      */
     @PostMapping("/comprar")
     @RequiresRole({ RolEnum.ADMIN, RolEnum.MECANICO, RolEnum.CLIENTE })
     public ResponseEntity<CreatePaymentResponseDTO> comprarRepuesto(
             @Valid @RequestBody TiendaCompraRequestDTO request) {
         try {
-            // 1. Buscar el repuesto
-            SpareParts repuesto = sparePartsRepository.findById(request.getSparePartId())
+            SpareParts sparePart = sparePartsRepository.findById(request.getSparePartId())
                 .orElseThrow(() -> new EntityNotFoundException(
                     "Repuesto no encontrado: " + request.getSparePartId()));
 
-            if (repuesto.getStock() <= 0) {
+            if (sparePart.getStock() <= 0) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
 
-            // 2. Crear una factura de venta de repuesto
-            Bill bill = new Bill();
-            bill.setNumBill("REP-" + repuesto.getReference() + "-" + System.currentTimeMillis());
-            bill.setTotal(repuesto.getPrice());
-            bill.setStatus(StatusBill.Pending);
-            Bill savedBill = billRepository.save(bill);
+            // Descontar stock
+            sparePart.setStock(sparePart.getStock() - 1);
+            sparePartsRepository.save(sparePart);
 
-            // 3. Crear preferencia de pago en MercadoPago
-            CreatePaymentRequestDTO paymentRequest = new CreatePaymentRequestDTO();
-            paymentRequest.setBillId(savedBill.getId());
-            paymentRequest.setPayerEmail(request.getPayerEmail());
-            paymentRequest.setPayerFirstName(request.getPayerFirstName());
-            paymentRequest.setPayerLastName(request.getPayerLastName());
+            // Crear preferencia en MercadoPago
+            CreatePaymentResponseDTO response = mercadoPagoService.createPreferenceForRepuesto(
+                sparePart.getName(),
+                sparePart.getReference(),
+                sparePart.getPrice(),
+                request.getPayerEmail(),
+                request.getPayerFirstName(),
+                request.getPayerLastName()
+            );
 
-            CreatePaymentResponseDTO response = mercadoPagoService.createPreference(paymentRequest);
+            // Registrar la venta
+            SpareSale sale = SpareSale.builder()
+                .sparePart(sparePart)
+                .payerEmail(request.getPayerEmail())
+                .price(sparePart.getPrice())
+                .externalReference(response.getExternalReference())
+                .preferenceId(response.getPreferenceId())
+                .status(SpareSaleStatus.PENDING)
+                .build();
+            spareSaleRepository.save(sale);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (EntityNotFoundException e) {

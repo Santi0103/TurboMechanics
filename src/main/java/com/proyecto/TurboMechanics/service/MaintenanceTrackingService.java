@@ -319,7 +319,7 @@ public class MaintenanceTrackingService {
             if (channel == NotificationChannel.Email || channel == NotificationChannel.Both) {
                 notificationService.SentEmailText(users.getEmail(), subject, body);
             }
-            if (channel == NotificationChannel.Whastapp || channel == NotificationChannel.Both) {
+            if (channel == NotificationChannel.Whatsapp || channel == NotificationChannel.Both) {
                 notificationService.SendWhatsappText(users.getPhone(), body);
             }
 
