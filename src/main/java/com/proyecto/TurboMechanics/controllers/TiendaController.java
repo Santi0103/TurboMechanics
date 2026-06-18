@@ -32,7 +32,7 @@ public class TiendaController {
     private final MercadoPagoService   mercadoPagoService;
 
     /**
-     * Endpoint público — lista los repuestos disponibles
+     * Endpoint público — lista los repuestos disponibles incluyendo imagen
      */
     @GetMapping("/repuestos")
     public ResponseEntity<List<SparePartsResponseDTO>> listarRepuestos() {
@@ -47,6 +47,7 @@ public class TiendaController {
                     .stockMin(r.getStockMin())
                     .price(r.getPrice())
                     .category(r.getCategory())
+                    .imageUrl(r.getImageUrl())
                     .statusStock(r.getStock() <= r.getStockMin() ? "CRÍTICO"
                                 : r.getStock() == 0           ? "AGOTADO"
                                 : "DISPONIBLE")

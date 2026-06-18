@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,7 +29,6 @@ import java.util.List;
 public class SparePartsController {
 
     private final SparePartsService sparePartsService;
-
     private final ExportService exportService;
 
     /**
@@ -100,6 +100,26 @@ public class SparePartsController {
     }
 
     /**
+     * Subir o actualizar la imagen de un repuesto
+     * @param id id del repuesto
+     * @param file archivo de imagen
+     * @return retorna el repuesto con la imagen actualizada
+     */
+    @RequiresRole({RolEnum.ADMIN})
+    @PostMapping(value = "/{id}/imagen", consumes = "multipart/form-data")
+    public ResponseEntity<SparePartsResponseDTO> uploadImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            SparePartsResponseDTO response = sparePartsService.uploadImage(id, file);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
      * Elimina el repuesto
      * @param id id del repuesto a eliminar
      * @return retorna el repuesto eliminado
@@ -150,9 +170,10 @@ public class SparePartsController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
     /**
      * Reporte de los repuestos mas usados
-     * @return retorna los repuestos mas usasdos 
+     * @return retorna los repuestos mas usasdos
      */
     @RequiresRole({RolEnum.ADMIN})
     @GetMapping("/reportes/mas-usados")
@@ -167,7 +188,7 @@ public class SparePartsController {
     }
 
     /**
-     * Reporte de cnatidad critica de repuestos
+     * Reporte de cantidad critica de repuestos
      * @return retorna una lista de los repuestos con una cantidad critica
      */
     @RequiresRole({RolEnum.ADMIN, RolEnum.MECANICO})
@@ -183,8 +204,8 @@ public class SparePartsController {
     }
 
     /**
-     * Reporte del stock en ecxel
-     * @return retorna un ecxel de la cantidad de los repuestos
+     * Reporte del stock en excel
+     * @return retorna un excel de la cantidad de los repuestos
      * @throws IOException si ocurre un error al generar el archivo
      */
     @RequiresRole({RolEnum.ADMIN})
@@ -194,8 +215,7 @@ public class SparePartsController {
             List<CriticalStockResponseDTO> data = sparePartsService.reportStockCritical();
             byte[] archivo = exportService.exportCriticalStockExcel(data);
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=stock-critico.xlsx")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=stock-critico.xlsx")
                     .contentType(MediaType.parseMediaType(
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .body(archivo);
@@ -206,8 +226,8 @@ public class SparePartsController {
     }
 
     /**
-     * Reporte del los repuestos mas usados
-     * @return retorna el ecxel de los repuestos mas usados
+     * Reporte de los repuestos mas usados
+     * @return retorna el excel de los repuestos mas usados
      * @throws IOException si ocurre un error al generar el archivo
      */
     @RequiresRole({RolEnum.ADMIN})
@@ -217,8 +237,7 @@ public class SparePartsController {
             List<PopularSpacePartsResponseDTO> data = sparePartsService.reportSpacePartsPopular();
             byte[] archivo = exportService.exportSparesPopularExcel(data);
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=repuestos-mas-usados.xlsx")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=repuestos-mas-usados.xlsx")
                     .contentType(MediaType.parseMediaType(
                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .body(archivo);

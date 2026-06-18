@@ -28,13 +28,18 @@ spring:
           starttls:
             enable: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 server:
   port: 9090
 
 security:
   jwt:
-    secret-key: QjaJfdfFv7krX863yrVAS87tfaz56rUWcrUzS0ZbqFU= # Genera con openssl rand -base64 32
-    token-expiration: 600000 # 10 min expresado en ms
+    secret-key: QjaJfdfFv7krX863yrVAS87tfaz56rUWcrUzS0ZbqFU=
+    token-expiration: 600000
 
 whatsapp:
   service:
@@ -50,8 +55,8 @@ app:
 mercadopago:
   access-token: APP_USR-7726278336164374-060415-e160bbde422ec8723d23c5f42247a7b0-3450458282
   public-key: APP_USR-3fc637bb-f3a6-47bd-8557-afceab72f160      
-  notification-url:  https://slug-scrooge-enquirer.ngrok-free.dev/payments/webhook
+  notification-url: https://slug-scrooge-enquirer.ngrok-free.dev/payments/webhook
 
 gemini:
   api:
-    key: 
+    key:
