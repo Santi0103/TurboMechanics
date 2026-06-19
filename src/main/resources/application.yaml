@@ -2,10 +2,17 @@ spring:
   application:
     name: TurboMechanics
   
+  web:
+    resources:
+      add-mappings: false
+
+  mvc:
+    static-path-pattern: /static/**
+
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-    password: santi0103
+    password: simon092416
     driver-class-name: org.postgresql.Driver
 
   jpa:
