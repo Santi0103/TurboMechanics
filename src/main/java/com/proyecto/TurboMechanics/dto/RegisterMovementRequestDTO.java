@@ -34,10 +34,6 @@ public class RegisterMovementRequestDTO {
     /** Id de la factura */
     private Long billId;
 
-    /** Método de pago */
-    @Positive(message = "El método de pago debe ser válido")
-    private Long payMethod;
-
     /** Documento del mecánico o admin que registra */
     @NotNull(message = "La identificación del registrador es obligatoria")
     @Positive(message = "La identificación debe ser válida")
