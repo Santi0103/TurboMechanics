@@ -3,16 +3,20 @@ package com.proyecto.TurboMechanics.service;
 import com.proyecto.TurboMechanics.dto.*;
 import com.proyecto.TurboMechanics.entity.Mechanic;
 import com.proyecto.TurboMechanics.entity.MechanicAbsence;
+import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.repository.MechanicAbsenceRepository;
 import com.proyecto.TurboMechanics.repository.MechanicRepository;
+import com.proyecto.TurboMechanics.repository.UsersRepository;
 import com.proyecto.TurboMechanics.repository.WorkOrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.TurboMechanics.enums.AbsenceType;
 import com.proyecto.TurboMechanics.enums.LaborStatus;
+import com.proyecto.TurboMechanics.enums.RolEnum;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +29,8 @@ public class MechanicService {
     private final MechanicRepository           mechanicRepository;
     private final WorkOrderRepository          workOrderRepository;
     private final MechanicAbsenceRepository    absenceRepository;
+    private final UsersRepository              usersRepository;
+    private final PasswordEncoder              passwordEncoder;
 
     /**
      * Registra un nuevo mecánico en el sistema.
@@ -38,10 +44,29 @@ public class MechanicService {
             throw new RuntimeException(
                     "Ya existe un mecánico registrado con el documento: " + request.getDocument());
         }
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new RuntimeException("La contraseña es obligatoria para registrar al mecánico");
+        }
+        if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("El correo ya se encuentra en uso: " + request.getEmail());
+        }
+
         Mechanic mechanic = new Mechanic();
         applyFields(mechanic, request);
         mechanic.setCreatedBy(createdBy);
         mechanicRepository.save(mechanic);
+
+        // Crea la cuenta de acceso (tabla usuarios) para que el mecánico pueda iniciar sesión
+        Users user = new Users();
+        user.setUsername(request.getName());
+        user.setIdentification(Math.toIntExact(request.getDocument()));
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+        user.setAddress("N/A");
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRolId(RolEnum.MECANICO.getId());
+        usersRepository.save(user);
+
         return mapToDTO(mechanic);
     }
 
@@ -105,9 +130,28 @@ public class MechanicService {
                 && mechanicRepository.existsByDocument(request.getDocument())) {
             throw new RuntimeException("Ya existe un mecánico con el documento: " + request.getDocument());
         }
+
+        String previousEmail = mechanic.getEmail();
         applyFields(mechanic, request);
         mechanic.setUpdatedBy(updatedBy);
         mechanicRepository.save(mechanic);
+
+        // Mantiene sincronizada la cuenta de acceso (tabla usuarios) del mecánico
+        usersRepository.findByEmail(previousEmail).ifPresent(user -> {
+            if (request.getEmail() != null && !request.getEmail().equals(previousEmail)) {
+                if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
+                    throw new RuntimeException("El correo ya se encuentra en uso: " + request.getEmail());
+                }
+                user.setEmail(request.getEmail());
+            }
+            user.setUsername(request.getName());
+            user.setPhone(request.getPhone());
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                user.setPassword(passwordEncoder.encode(request.getPassword()));
+            }
+            usersRepository.save(user);
+        });
+
         return mapToDTO(mechanic);
     }
 
