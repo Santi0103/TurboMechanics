@@ -29,9 +29,18 @@ public class MechanicRequestDTO {
     @Pattern(regexp = "^[0-9]{7,15}$", message = "Teléfono inválido")
     private String phone;
 
-    /** Correo electrónico de contacto (opcional) */
+    /** Correo electrónico de contacto (obligatorio, se usa como usuario de inicio de sesión) */
+    @NotBlank(message = "El correo es obligatorio")
     @Email(message = "Correo inválido")
     private String email;
+
+    /**
+     * Contraseña para que el mecánico pueda iniciar sesión.
+     * Obligatoria al registrar (se valida en el service); opcional al actualizar
+     * (si se envía vacía/nula, no se modifica la contraseña existente).
+     */
+    @Size(min = 8, message = "La contraseña debe tener mínimo 8 caracteres")
+    private String password;
 
     /** Salario del mecánico (opcional) */
     @DecimalMin(value = "0.0", inclusive = false, message = "El salario debe ser mayor a cero")
