@@ -17,6 +17,7 @@ import com.proyecto.TurboMechanics.repository.SparePartsRepository;
 import com.proyecto.TurboMechanics.repository.SpareSaleRepository;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.MercadoPagoService;
+import com.proyecto.TurboMechanics.service.SparePartsService;
 
 import jakarta.validation.Valid;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +31,7 @@ public class TiendaController {
     private final SparePartsRepository sparePartsRepository;
     private final SpareSaleRepository  spareSaleRepository;
     private final MercadoPagoService   mercadoPagoService;
+    private final SparePartsService    sparePartsService;
 
     /**
      * Endpoint público — lista los repuestos disponibles incluyendo imagen
@@ -79,6 +81,10 @@ public class TiendaController {
             // Descontar stock
             sparePart.setStock(sparePart.getStock() - 1);
             sparePartsRepository.save(sparePart);
+
+            // Registrar la salida en el historial de movimientos de inventario
+            // para que quede reflejada en el reporte de "repuestos más usados"
+            sparePartsService.registerSaleMovement(sparePart, 1);
 
             // Crear preferencia en MercadoPago
             CreatePaymentResponseDTO response = mercadoPagoService.createPreferenceForRepuesto(

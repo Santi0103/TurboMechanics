@@ -16,10 +16,12 @@ import com.proyecto.TurboMechanics.dto.SendReminderApponitmentRequestDTO;
 import com.proyecto.TurboMechanics.entity.Appointment;
 import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.Vehicle;
+import com.proyecto.TurboMechanics.entity.VehiculoCliente;
 import com.proyecto.TurboMechanics.enums.StatusAppointment;
 import com.proyecto.TurboMechanics.repository.AppointmentRepository;
 import com.proyecto.TurboMechanics.repository.UsersRepository;
 import com.proyecto.TurboMechanics.repository.VehicleRepository;
+import com.proyecto.TurboMechanics.repository.VehiculoClienteRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,8 @@ public class AppointmentService {
     private final UsersRepository       usersRepository;
 
     private final VehicleRepository     vehicleRepository;
+
+    private final VehiculoClienteRepository vehiculoClienteRepository;
 
     private final NotificationService   notificationService;
 
@@ -56,9 +60,7 @@ public class AppointmentService {
             .orElseThrow(() -> new EntityNotFoundException(
                 "Cliente no encontrado con documento: " + request.getIdentification()));
 
-        Vehicle vehicle = vehicleRepository.findByPlateIgnoreCase(request.getPlate())
-            .orElseThrow(() -> new EntityNotFoundException(
-                "Vehículo no encontrado con placa: " + request.getPlate()));
+        Vehicle vehicle = findOrCreateVehicle(request.getPlate(), users);
 
         // Verificar disponibilidad del horario
         Boolean occupied = appointmentRepository.existsByDateAndTime(
@@ -83,6 +85,37 @@ public class AppointmentService {
         log.info("Cita registrada id={} para cliente={} fecha={} hora={}",
             saved.getId(), request.getIdentification(), request.getDate(), request.getTime());
         return saved;
+    }
+
+    /**
+     * Busca el vehículo en la tabla Vehicle (usada por órdenes de trabajo).
+     * Si no existe, lo crea automáticamente copiando los datos desde la tabla
+     * vehiculos_cliente (donde el cliente registra sus vehículos en "Mis Vehículos"),
+     * para permitir agendar citas sin necesidad de tener una orden de trabajo previa.
+     * @param plate placa del vehículo
+     * @param owner cliente propietario, usado si hay que crear el registro en Vehicle
+     * @return el vehículo encontrado o recién creado en la tabla Vehicle
+     */
+    private Vehicle findOrCreateVehicle(String plate, Users owner) {
+        return vehicleRepository.findByPlateIgnoreCase(plate)
+            .orElseGet(() -> {
+                VehiculoCliente vc = vehiculoClienteRepository.findByPlacaIgnoreCase(plate)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                        "Vehículo no encontrado con placa: " + plate));
+
+                Vehicle nuevo = new Vehicle();
+                nuevo.setPlate(vc.getPlaca());
+                nuevo.setBrand(vc.getMarca());
+                nuevo.setModel(vc.getModelo());
+                nuevo.setYear(vc.getAnio());
+                nuevo.setColor(vc.getColor());
+                nuevo.setOwner(owner);
+
+                Vehicle guardado = vehicleRepository.save(nuevo);
+                log.info("Vehículo placa={} creado automáticamente en tabla Vehicle a partir de vehiculos_cliente",
+                    plate);
+                return guardado;
+            });
     }
 
     /**
