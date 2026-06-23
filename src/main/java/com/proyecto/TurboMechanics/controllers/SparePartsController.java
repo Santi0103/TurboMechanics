@@ -14,6 +14,7 @@ import com.proyecto.TurboMechanics.service.SparePartsService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,10 +24,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/inventario")
 @RequiredArgsConstructor
+@Slf4j
 public class SparePartsController {
 
     private final SparePartsService sparePartsService;
@@ -140,13 +143,14 @@ public class SparePartsController {
      */
     @RequiresRole({RolEnum.ADMIN})
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
             sparePartsService.deleteSpareParts(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            log.error("Error al eliminar repuesto {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Error al eliminar el repuesto"));
         }
     }
 

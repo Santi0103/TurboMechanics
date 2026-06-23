@@ -7,10 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.TurboMechanics.dto.PriceRequestDTO;
+import com.proyecto.TurboMechanics.dto.ServiceHistoryCheckResponseDTO;
 import com.proyecto.TurboMechanics.dto.ServiceRequestDTO;
 import com.proyecto.TurboMechanics.dto.ServiceResponseDTO;
 import com.proyecto.TurboMechanics.entity.ServiceEntity;
+import com.proyecto.TurboMechanics.entity.WarrantyServiceCoverage;
 import com.proyecto.TurboMechanics.repository.ServiceRepository;
+import com.proyecto.TurboMechanics.repository.WarrantyServiceCoverageRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 public class ServiceService {
 
     private final ServiceRepository serviceRepository;
+
+    private final WarrantyServiceCoverageRepository warrantyServiceCoverageRepository;
 
     /**
      * Registra un nuevo servicio en el sistema.
@@ -79,16 +84,45 @@ public class ServiceService {
     }
 
     /**
+     * Verifica si un servicio ya tiene garantías asociadas, para poder
+     * advertir al usuario antes de eliminarlo. No bloquea nada, solo informa.
+     *
+     * @param id identificador del servicio
+     */
+    @Transactional(readOnly = true)
+    public ServiceHistoryCheckResponseDTO checkHistory(Long id) {
+        long cantidadGarantias = warrantyServiceCoverageRepository.findByService_Id(id)
+                .stream().map(c -> c.getWarranty().getId()).distinct().count();
+
+        return ServiceHistoryCheckResponseDTO.builder()
+                .tieneGarantias(cantidadGarantias > 0)
+                .cantidadGarantias((int) cantidadGarantias)
+                .build();
+    }
+
+    /**
      * Elimina un servicio por su identificador.
+     * <p>
+     * El servicio se borra físicamente, pero su historial NO se pierde: las
+     * garantías (garantia_servicios_cobertura) que lo referenciaban quedan
+     * con el servicio en null (se desvinculan) en vez de borrarse, guardando
+     * una copia (snapshot) del nombre del servicio en el momento de la
+     * eliminación, igual que con los repuestos.
      *
      * @param id identificador del servicio
      */
     @Transactional
     public void deleteService(Long id) {
-        if (!serviceRepository.existsById(id)) {
-            throw new RuntimeException("Servicio no encontrado con id: " + id);
+        ServiceEntity service = findOrThrow(id);
+
+        List<WarrantyServiceCoverage> coverages = warrantyServiceCoverageRepository.findByService_Id(id);
+        for (WarrantyServiceCoverage coverage : coverages) {
+            coverage.setNameSnapshot(service.getName());
+            coverage.setService(null);
         }
-        serviceRepository.deleteById(id);
+        warrantyServiceCoverageRepository.saveAll(coverages);
+
+        serviceRepository.delete(service);
     }
 
     /**

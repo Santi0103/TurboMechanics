@@ -7,6 +7,8 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.LineSeparator;
 import com.itextpdf.layout.element.Paragraph;
 import com.proyecto.TurboMechanics.dto.CloseWarrantyRequestDTO;
+import com.proyecto.TurboMechanics.dto.ServiceCoverageItemDTO;
+import com.proyecto.TurboMechanics.dto.SparePartCoverageItemDTO;
 import com.proyecto.TurboMechanics.dto.WarrantyRequestDTO;
 import com.proyecto.TurboMechanics.dto.WarrantyResponseDTO;
 import com.proyecto.TurboMechanics.entity.*;
@@ -20,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +39,8 @@ public class WarrantyService {
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
-     * Registra una nueva garantía para una orden de trabajo existente
+     * Registra una nueva garantía para una orden de trabajo existente.
+     * Una sola garantía puede cubrir varios servicios y/o varios repuestos a la vez.
      * @param request datos de la garantía a registrar
      * @param createdBy usuario que crea la garantía
      * @return datos de la garantía registrada
@@ -58,21 +62,8 @@ public class WarrantyService {
         warranty.setObservations(request.getObservations());
         warranty.setCreatedBy(createdBy);
 
-        // Asociar servicio (opcional)
-        if (request.getServiceId() != null) {
-            ServiceEntity service = serviceRepository.findById(request.getServiceId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Servicio no encontrado con id: " + request.getServiceId()));
-            warranty.setService(service);
-        }
-
-        // Asociar repuesto (opcional)
-        if (request.getSparePartId() != null) {
-            SpareParts sparePart = sparePartsRepository.findById(request.getSparePartId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Repuesto no encontrado con id: " + request.getSparePartId()));
-            warranty.setSparePart(sparePart);
-        }
+        applyServices(warranty, request.getServiceIds());
+        applySpareParts(warranty, request.getSparePartIds());
 
         // Estado inicial según vigencia
         warranty.setStatus(resolveStatus(warranty));
@@ -90,6 +81,7 @@ public class WarrantyService {
     public List<WarrantyResponseDTO> getAllWarranties() {
         return warrantyRepository.findAll().stream()
                 .map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA) // cerradas solo viven en el Historial
                 .map(this::mapToDTO)
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
@@ -104,7 +96,9 @@ public class WarrantyService {
     public List<WarrantyResponseDTO> getWarrantiesByClient(String clientIdentification) {
         return warrantyRepository
                 .findByWorkOrderClientidentificationOrderByCreatedAtDesc(clientIdentification)
-                .stream().map(this::refreshStatusAndSave).map(this::mapToDTO)
+                .stream().map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA)
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -117,7 +111,9 @@ public class WarrantyService {
     public List<WarrantyResponseDTO> getWarrantiesByVehicle(String vehiclePlate) {
         return warrantyRepository
                 .findByWorkOrderVehicleplateIgnoreCaseOrderByCreatedAtDesc(vehiclePlate)
-                .stream().map(this::refreshStatusAndSave).map(this::mapToDTO)
+                .stream().map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA)
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
@@ -128,8 +124,11 @@ public class WarrantyService {
      */
     @Transactional
     public List<WarrantyResponseDTO> getWarrantiesByService(Long serviceId) {
-        return warrantyRepository.findByServiceIdOrderByCreatedAtDesc(serviceId)
-                .stream().map(this::refreshStatusAndSave).map(this::mapToDTO)
+        return warrantyRepository.findByServiceId(serviceId)
+                .stream().map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA)
+                .map(this::mapToDTO)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -140,20 +139,26 @@ public class WarrantyService {
      */
     @Transactional
     public List<WarrantyResponseDTO> getWarrantiesBySparePart(Long sparePartId) {
-        return warrantyRepository.findBySparePartIdOrderByCreatedAtDesc(sparePartId)
-                .stream().map(this::refreshStatusAndSave).map(this::mapToDTO)
+        return warrantyRepository.findBySparePartId(sparePartId)
+                .stream().map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA)
+                .map(this::mapToDTO)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Filtra garantías por estado (ACTIVA, VENCIDA, CERRADA).
-     * @param text texto de búsqueda libre sobre cliente, placa, servicio o repuesto
+     * Búsqueda de texto libre sobre cliente, placa, servicios o repuestos cubiertos.
+     * @param text texto de búsqueda libre
      * @return lista de garantías que coinciden con el texto de búsqueda
      */
     @Transactional
     public List<WarrantyResponseDTO> searchWarranties(String text) {
         return warrantyRepository.searchByText(text)
-                .stream().map(this::refreshStatusAndSave).map(this::mapToDTO)
+                .stream().map(this::refreshStatusAndSave)
+                .filter(w -> w.getStatus() != WarrantyStatus.CERRADA)
+                .map(this::mapToDTO)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 
@@ -169,7 +174,8 @@ public class WarrantyService {
     }
 
     /**
-     * Actualiza los datos de una garantía existente.
+     * Actualiza los datos de una garantía existente (incluyendo los servicios y
+     * repuestos que cubre, que se reemplazan por completo con los enviados).
      * No permite modificar garantías CERRADAS.
      * @param id        id de la garantía
      * @param request   nuevos datos
@@ -195,25 +201,8 @@ public class WarrantyService {
             warranty.setWorkOrder(workOrder);
         }
 
-        // Actualizar servicio
-        if (request.getServiceId() != null) {
-            ServiceEntity service = serviceRepository.findById(request.getServiceId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Servicio no encontrado con id: " + request.getServiceId()));
-            warranty.setService(service);
-        } else {
-            warranty.setService(null);
-        }
-
-        // Actualizar repuesto
-        if (request.getSparePartId() != null) {
-            SpareParts sparePart = sparePartsRepository.findById(request.getSparePartId())
-                    .orElseThrow(() -> new RuntimeException(
-                            "Repuesto no encontrado con id: " + request.getSparePartId()));
-            warranty.setSparePart(sparePart);
-        } else {
-            warranty.setSparePart(null);
-        }
+        applyServices(warranty, request.getServiceIds());
+        applySpareParts(warranty, request.getSparePartIds());
 
         warranty.setStartDate(request.getStartDate());
         warranty.setEndDate(request.getEndDate());
@@ -304,12 +293,24 @@ public class WarrantyService {
 
             doc.add(new LineSeparator(new SolidLine()));
 
-            // Cobertura
-            if (warranty.getService() != null)
-                doc.add(new Paragraph("Servicio cubierto : " + warranty.getService().getName()));
-            if (warranty.getSparePart() != null)
-                doc.add(new Paragraph("Repuesto cubierto : " + warranty.getSparePart().getName()
-                        + " [Ref: " + warranty.getSparePart().getReference() + "]"));
+            // Cobertura: todos los servicios y todos los repuestos cubiertos por ESTA garantía
+            if (warranty.getServiceCoverages() != null && !warranty.getServiceCoverages().isEmpty()) {
+                String servicios = warranty.getServiceCoverages().stream()
+                        .map(c -> c.getService() != null
+                                ? c.getService().getName()
+                                : c.getNameSnapshot() + " (eliminado del catálogo)")
+                        .collect(Collectors.joining(", "));
+                doc.add(new Paragraph("Servicios cubiertos : " + servicios));
+            }
+
+            if (warranty.getSparePartCoverages() != null && !warranty.getSparePartCoverages().isEmpty()) {
+                String repuestos = warranty.getSparePartCoverages().stream()
+                        .map(c -> c.getSparePart() != null
+                                ? c.getSparePart().getName() + " [Ref: " + c.getSparePart().getReference() + "]"
+                                : c.getNameSnapshot() + " [Ref: " + c.getReferenceSnapshot() + "] (eliminado del inventario)")
+                        .collect(Collectors.joining(", "));
+                doc.add(new Paragraph("Repuestos cubiertos : " + repuestos));
+            }
 
             doc.add(new LineSeparator(new SolidLine()));
 
@@ -342,6 +343,44 @@ public class WarrantyService {
     private Warranty findById(Long id) {
         return warrantyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Garantía no encontrada con id: " + id));
+    }
+
+    /**
+     * Reemplaza la lista de servicios cubiertos por la garantía con los ids recibidos.
+     * @param warranty   garantía a modificar
+     * @param serviceIds ids de los servicios a asociar (puede ser null o vacío)
+     */
+    private void applyServices(Warranty warranty, List<Long> serviceIds) {
+        warranty.getServiceCoverages().clear();
+        if (serviceIds == null) return;
+        for (Long serviceId : serviceIds) {
+            ServiceEntity service = serviceRepository.findById(serviceId)
+                    .orElseThrow(() -> new RuntimeException("Servicio no encontrado con id: " + serviceId));
+            WarrantyServiceCoverage coverage = new WarrantyServiceCoverage();
+            coverage.setWarranty(warranty);
+            coverage.setService(service);
+            warranty.getServiceCoverages().add(coverage);
+        }
+    }
+
+    /**
+     * Reemplaza la lista de repuestos cubiertos por la garantía con los ids recibidos.
+     * Gracias al cascade ALL + orphanRemoval en Warranty.sparePartCoverages, las filas
+     * antiguas que ya no estén en la nueva lista se eliminan automáticamente.
+     * @param warranty     garantía a modificar
+     * @param sparePartIds ids de los repuestos a asociar (puede ser null o vacío)
+     */
+    private void applySpareParts(Warranty warranty, List<Long> sparePartIds) {
+        warranty.getSparePartCoverages().clear();
+        if (sparePartIds == null) return;
+        for (Long sparePartId : sparePartIds) {
+            SpareParts sparePart = sparePartsRepository.findById(sparePartId)
+                    .orElseThrow(() -> new RuntimeException("Repuesto no encontrado con id: " + sparePartId));
+            WarrantySparePartCoverage coverage = new WarrantySparePartCoverage();
+            coverage.setWarranty(warranty);
+            coverage.setSparePart(sparePart);
+            warranty.getSparePartCoverages().add(coverage);
+        }
     }
 
     /**
@@ -379,16 +418,41 @@ public class WarrantyService {
         dto.setClientIdentification(w.getWorkOrder().getClientidentification());
         dto.setVehiclePlate(w.getWorkOrder().getVehicleplate());
 
-        if (w.getService() != null) {
-            dto.setServiceId(w.getService().getId());
-            dto.setServiceName(w.getService().getName());
-        }
+        List<ServiceCoverageItemDTO> services = w.getServiceCoverages() == null ? List.of()
+                : w.getServiceCoverages().stream()
+                        .map(c -> {
+                            boolean deleted = c.getService() == null;
+                            String name = deleted ? c.getNameSnapshot() : c.getService().getName();
+                            Long serviceId = deleted ? null : c.getService().getId();
+                            return new ServiceCoverageItemDTO(
+                                    serviceId,
+                                    deleted && name != null ? name + " (eliminado)" : name
+                            );
+                        })
+                        .collect(Collectors.toList());
+        dto.setServices(services);
 
-        if (w.getSparePart() != null) {
-            dto.setSparePartId(w.getSparePart().getId());
-            dto.setSparePartName(w.getSparePart().getName());
-            dto.setSparePartReference(w.getSparePart().getReference());
-        }
+        List<SparePartCoverageItemDTO> spareParts = w.getSparePartCoverages() == null ? List.of()
+                : w.getSparePartCoverages().stream()
+                        .map(c -> {
+                            boolean deleted = c.getSparePart() == null;
+                            String name = deleted ? c.getNameSnapshot() : c.getSparePart().getName();
+                            String reference = deleted ? c.getReferenceSnapshot() : c.getSparePart().getReference();
+                            Long sparePartId = deleted ? null : c.getSparePart().getId();
+                            return new SparePartCoverageItemDTO(
+                                    sparePartId,
+                                    deleted && name != null ? name + " (eliminado)" : name,
+                                    reference,
+                                    deleted
+                            );
+                        })
+                        .collect(Collectors.toList());
+        dto.setSpareParts(spareParts);
+
+        List<String> resumen = new ArrayList<>();
+        services.forEach(s -> resumen.add(s.getName()));
+        spareParts.forEach(p -> resumen.add(p.getName()));
+        dto.setCoverageSummary(resumen.isEmpty() ? "—" : String.join(", ", resumen));
 
         dto.setStartDate(w.getStartDate());
         dto.setEndDate(w.getEndDate());

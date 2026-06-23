@@ -13,7 +13,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "spare_sale")
+@Table(name = "venta_de_repuestos")
 public class SpareSale {
 
     @Id

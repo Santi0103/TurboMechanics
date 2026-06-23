@@ -348,13 +348,29 @@ public class ChatbotService {
 
         String listado = garantias.stream()
             .limit(10)
-            .map(g -> "- Comprobante %s | Cubre: %s | Vigencia: %s a %s | Estado: %s".formatted(
-                g.getVoucherNumber() != null ? g.getVoucherNumber() : "Sin comprobante",
-                g.getService() != null ? g.getService().getName() : (g.getSparePart() != null ? g.getSparePart().getName() : "No especificado"),
-                g.getStartDate().format(FECHA),
-                g.getEndDate().format(FECHA),
-                g.getStatus()
-            ))
+            .map(g -> {
+                List<String> partes = new java.util.ArrayList<>();
+                if (g.getServiceCoverages() != null) {
+                    g.getServiceCoverages().forEach(c -> {
+                        if (c.getService() != null) partes.add(c.getService().getName());
+                        else if (c.getNameSnapshot() != null) partes.add(c.getNameSnapshot() + " (eliminado)");
+                    });
+                }
+                if (g.getSparePartCoverages() != null) {
+                    g.getSparePartCoverages().forEach(c -> {
+                        if (c.getSparePart() != null) partes.add(c.getSparePart().getName());
+                        else if (c.getNameSnapshot() != null) partes.add(c.getNameSnapshot() + " (eliminado)");
+                    });
+                }
+                String cubre = partes.isEmpty() ? "No especificado" : String.join(", ", partes);
+                return "- Comprobante %s | Cubre: %s | Vigencia: %s a %s | Estado: %s".formatted(
+                    g.getVoucherNumber() != null ? g.getVoucherNumber() : "Sin comprobante",
+                    cubre,
+                    g.getStartDate().format(FECHA),
+                    g.getEndDate().format(FECHA),
+                    g.getStatus()
+                );
+            })
             .collect(Collectors.joining("\n"));
 
         return """
