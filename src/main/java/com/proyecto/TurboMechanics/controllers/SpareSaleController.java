@@ -42,11 +42,17 @@ public class SpareSaleController {
     }
 
     private SpareSaleResponseDTO toDTO(SpareSale s) {
+        boolean sparePartDeleted = s.getSparePart() == null;
+        String name = sparePartDeleted ? s.getSparePartNameSnapshot() : s.getSparePart().getName();
+        String reference = sparePartDeleted ? s.getSparePartReferenceSnapshot() : s.getSparePart().getReference();
+        String category = sparePartDeleted ? s.getSparePartCategorySnapshot() : s.getSparePart().getCategory();
+
         return SpareSaleResponseDTO.builder()
             .id(s.getId())
-            .sparePartName(s.getSparePart().getName())
-            .sparePartReference(s.getSparePart().getReference())
-            .sparePartCategory(s.getSparePart().getCategory())
+            .sparePartName(sparePartDeleted ? name + " (eliminado)" : name)
+            .sparePartReference(reference)
+            .sparePartCategory(category)
+            .sparePartDeleted(sparePartDeleted)
             .payerEmail(s.getPayerEmail())
             .price(s.getPrice())
             .externalReference(s.getExternalReference())

@@ -4,6 +4,7 @@ import com.proyecto.TurboMechanics.dto.CriticalStockResponseDTO;
 import com.proyecto.TurboMechanics.dto.MovementsRequestDTO;
 import com.proyecto.TurboMechanics.dto.MovementsResponseDTO;
 import com.proyecto.TurboMechanics.dto.PopularSpacePartsResponseDTO;
+import com.proyecto.TurboMechanics.dto.SparePartHistoryCheckResponseDTO;
 import com.proyecto.TurboMechanics.dto.SparePartsRequestDTO;
 import com.proyecto.TurboMechanics.dto.SparePartsResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
@@ -117,6 +118,19 @@ public class SparePartsController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    /**
+     * Verifica si el repuesto tiene historial (ventas y/o garantías) antes
+     * de eliminarlo, para mostrar una advertencia en el frontend. No
+     * bloquea la eliminación, solo informa.
+     * @param id id del repuesto
+     * @return SparePartHistoryCheckResponseDTO con el detalle del historial
+     */
+    @RequiresRole({RolEnum.ADMIN})
+    @GetMapping("/{id}/historial-check")
+    public ResponseEntity<SparePartHistoryCheckResponseDTO> checkHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(sparePartsService.checkHistory(id));
     }
 
     /**
