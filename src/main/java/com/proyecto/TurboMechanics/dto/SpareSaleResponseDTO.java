@@ -13,6 +13,7 @@ public class SpareSaleResponseDTO {
     private String sparePartName;
     private String sparePartReference;
     private String sparePartCategory;
+    private boolean sparePartDeleted;
     private String payerEmail;
     private BigDecimal price;
     private String externalReference;

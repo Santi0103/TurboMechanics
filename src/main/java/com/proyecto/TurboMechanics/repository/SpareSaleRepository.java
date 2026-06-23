@@ -12,4 +12,5 @@ import com.proyecto.TurboMechanics.entity.SpareSale;
 public interface SpareSaleRepository extends JpaRepository<SpareSale, Long> {
     List<SpareSale> findAllByOrderByCreatedAtDesc();
     Optional<SpareSale> findByExternalReference(String externalReference);
+    List<SpareSale> findBySparePart_Id(Long sparePartId);
 }

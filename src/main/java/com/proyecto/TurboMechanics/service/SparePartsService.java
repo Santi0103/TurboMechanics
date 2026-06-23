@@ -17,13 +17,18 @@ import com.proyecto.TurboMechanics.dto.CriticalStockResponseDTO;
 import com.proyecto.TurboMechanics.dto.MovementsRequestDTO;
 import com.proyecto.TurboMechanics.dto.MovementsResponseDTO;
 import com.proyecto.TurboMechanics.dto.PopularSpacePartsResponseDTO;
+import com.proyecto.TurboMechanics.dto.SparePartHistoryCheckResponseDTO;
 import com.proyecto.TurboMechanics.dto.SparePartsRequestDTO;
 import com.proyecto.TurboMechanics.dto.SparePartsResponseDTO;
 import com.proyecto.TurboMechanics.entity.InventoryMovements;
 import com.proyecto.TurboMechanics.entity.SpareParts;
+import com.proyecto.TurboMechanics.entity.SpareSale;
+import com.proyecto.TurboMechanics.entity.Warranty;
 import com.proyecto.TurboMechanics.enums.MovementType;
 import com.proyecto.TurboMechanics.repository.InventoryMovementsRepository;
 import com.proyecto.TurboMechanics.repository.SparePartsRepository;
+import com.proyecto.TurboMechanics.repository.SpareSaleRepository;
+import com.proyecto.TurboMechanics.repository.WarrantyRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +40,10 @@ public class SparePartsService {
     private final SparePartsRepository sparePartsRepository;
 
     private final InventoryMovementsRepository inventoryMovementsRepository;
+
+    private final SpareSaleRepository spareSaleRepository;
+
+    private final WarrantyRepository warrantyRepository;
     
     /**
      * Registra un nuevo repuesto en el sistema.
@@ -118,16 +127,63 @@ public class SparePartsService {
     }
     
     /**
+     * Verifica si un repuesto ya tiene historial asociado (ventas y/o
+     * garantías), para poder advertir al usuario antes de eliminarlo.
+     * No bloquea nada, solo informa.
+     *
+     * @param id identificador del repuesto
+     */
+    public SparePartHistoryCheckResponseDTO checkHistory(Long id) {
+        int cantidadVentas = spareSaleRepository.findBySparePart_Id(id).size();
+        int cantidadGarantias = warrantyRepository.findBySparePartIdOrderByCreatedAtDesc(id).size();
+
+        return SparePartHistoryCheckResponseDTO.builder()
+                .tieneVentas(cantidadVentas > 0)
+                .tieneGarantias(cantidadGarantias > 0)
+                .cantidadVentas(cantidadVentas)
+                .cantidadGarantias(cantidadGarantias)
+                .build();
+    }
+
+    /**
      * Elimina un repuesto por su identificador.
+     * <p>
+     * El repuesto se borra físicamente, pero su historial NO se pierde:
+     * las ventas (spare_sale) y garantías (garantias) que lo referenciaban
+     * quedan con el repuesto en null (se desvinculan) en vez de borrarse.
+     * Para que las ventas sigan siendo identificables después de perder la
+     * relación, se guarda una copia (snapshot) del nombre/referencia/categoría
+     * del repuesto en el momento de la eliminación.
      *
      * @param id identificador del repuesto
      */
     @Transactional
     public void deleteSpareParts(Long id) {
-        if (!sparePartsRepository.existsById(id)) {
-            throw new RuntimeException("Repuesto no encontrado con id: " + id);
+        SpareParts spareParts = sparePartsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Repuesto no encontrado con id: " + id));
+
+        // 1) Desvincular las garantías que cubren este repuesto (quedan con sparePart = null,
+        // pero la garantía en sí se conserva)
+        List<Warranty> warranties = warrantyRepository.findBySparePartIdOrderByCreatedAtDesc(id);
+        for (Warranty warranty : warranties) {
+            warranty.setSparePart(null);
         }
-        sparePartsRepository.deleteById(id);
+        warrantyRepository.saveAll(warranties);
+
+        // 2) Desvincular las ventas hechas sobre este repuesto (quedan con sparePart = null,
+        // guardando una copia de sus datos para que sigan siendo identificables)
+        List<SpareSale> sales = spareSaleRepository.findBySparePart_Id(id);
+        for (SpareSale sale : sales) {
+            sale.setSparePartNameSnapshot(spareParts.getName());
+            sale.setSparePartReferenceSnapshot(spareParts.getReference());
+            sale.setSparePartCategorySnapshot(spareParts.getCategory());
+            sale.setSparePart(null);
+        }
+        spareSaleRepository.saveAll(sales);
+
+        // 3) Eliminar el repuesto. Los movimientos de inventario (InventoryMovements)
+        // se eliminan automáticamente por el cascade = ALL definido en SpareParts.movements
+        sparePartsRepository.delete(spareParts);
     }
     
     /**

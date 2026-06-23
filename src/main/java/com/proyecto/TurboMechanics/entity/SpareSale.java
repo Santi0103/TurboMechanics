@@ -20,10 +20,22 @@ public class SpareSale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Spare part purchased */
+    /** Spare part purchased (puede quedar en null si el repuesto fue eliminado luego) */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "spare_part_id", nullable = false)
+    @JoinColumn(name = "spare_part_id", nullable = true)
     private SpareParts sparePart;
+
+    /** Copia del nombre del repuesto, usada cuando el repuesto ya fue eliminado */
+    @Column(name = "spare_part_name_snapshot", length = 100)
+    private String sparePartNameSnapshot;
+
+    /** Copia de la referencia del repuesto, usada cuando el repuesto ya fue eliminado */
+    @Column(name = "spare_part_reference_snapshot", length = 50)
+    private String sparePartReferenceSnapshot;
+
+    /** Copia de la categoría del repuesto, usada cuando el repuesto ya fue eliminado */
+    @Column(name = "spare_part_category_snapshot", length = 60)
+    private String sparePartCategorySnapshot;
 
     /** Buyer email */
     @Column(name = "payer_email", nullable = false)
