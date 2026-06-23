@@ -1,12 +1,16 @@
 package com.proyecto.TurboMechanics.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class CloseWarrantyRequestDTO {
 
-    /** Motivo del cierre de la garantía (obligatorio) */
+    /** Motivo del cierre de la garantía (obligatorio, debe ser texto explicativo) */
     @NotBlank(message = "El motivo de cierre es obligatorio")
+    @Size(min = 5, max = 300, message = "El motivo debe tener entre 5 y 300 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El motivo debe ser un texto explicativo, no solo números o símbolos")
     private String closureReason;
 }

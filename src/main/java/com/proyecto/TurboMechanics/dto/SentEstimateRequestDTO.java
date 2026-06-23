@@ -3,8 +3,10 @@ package com.proyecto.TurboMechanics.dto;
 import java.math.BigDecimal;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
@@ -16,9 +18,10 @@ public class SentEstimateRequestDTO {
     @Positive(message = "El id de la orden de trabajo debe ser mayor a 0")
     private Long workOrderId;
 
-    /** Documento de identidad del cliente */
+    /** Documento de identidad del cliente (solo números, mínimo 5 dígitos) */
     @NotNull(message = "La identificación es obligatoria")
     @Positive(message = "La identificación debe ser válida")
+    @Min(value = 10000, message = "La identificación debe tener al menos 5 dígitos")
     private Integer identification;
 
     /** Placa del vehículo */
@@ -30,6 +33,7 @@ public class SentEstimateRequestDTO {
      * repuestos, mano de obra, tiempos estimados y costos parciales
      */
     @NotBlank(message = "El detalle del presupuesto es obligatorio")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El detalle del presupuesto debe ser un texto descriptivo, no solo números")
     private String description;
 
     /** total estimado */

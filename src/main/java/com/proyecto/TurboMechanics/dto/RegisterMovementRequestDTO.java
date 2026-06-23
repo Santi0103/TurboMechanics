@@ -7,6 +7,7 @@ import com.proyecto.TurboMechanics.enums.MovementType;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -22,8 +23,9 @@ public class RegisterMovementRequestDTO {
     @NotNull(message = "El concepto del movimiento es obligatorio")
     private MovementConcept concept;
 
-    /** Descripción del movimiento */
+    /** Descripción del movimiento (opcional; si se informa, debe ser texto, no solo números) */
     @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
+    @Pattern(regexp = "^$|^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "La descripción debe ser un texto, no solo números o símbolos")
     private String description;
 
     /** Monto del movimiento */
@@ -33,6 +35,10 @@ public class RegisterMovementRequestDTO {
 
     /** Id de la factura */
     private Long billId;
+
+    /** Método de pago */
+    @Positive(message = "El método de pago debe ser válido")
+    private Long payMethod;
 
     /** Documento del mecánico o admin que registra */
     @NotNull(message = "La identificación del registrador es obligatoria")
