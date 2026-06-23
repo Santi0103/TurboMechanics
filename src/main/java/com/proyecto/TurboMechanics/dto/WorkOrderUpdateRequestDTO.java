@@ -8,14 +8,15 @@ import java.time.LocalDate;
 @Data
 public class WorkOrderUpdateRequestDTO {
     
-    /** El nombre del cliente */
+    /** El nombre del cliente (debe ser texto, no solo números) */
     @NotBlank(message = "El nombre del cliente es obligatorio")
     @Size(max = 150)
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El nombre del cliente no puede ser solo números o símbolos")
     private String clientname;
 
-    /** La identificación del cliente */
+    /** La identificación del cliente (solo números) */
     @NotBlank(message = "La identificación del cliente es obligatoria")
-    @Size(max = 20)
+    @Pattern(regexp = "^[0-9]{5,20}$", message = "La identificación debe contener únicamente números (5 a 20 dígitos)")
     private String clientidentification;
 
     /** El número de teléfono del cliente */
@@ -28,14 +29,16 @@ public class WorkOrderUpdateRequestDTO {
     @Size(max = 10)
     private String vehicleplate;
 
-    /** La marca del vehículo */
+    /** La marca del vehículo (debe ser texto, no solo números) */
     @NotBlank(message = "La marca del vehículo es obligatoria")
     @Size(max = 50)
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "La marca no puede ser solo números o símbolos")
     private String vehiclebrand;
 
-    /** El modelo del vehículo */
+    /** El modelo del vehículo (debe contener letras; algunos modelos llevan números, ej. "Civic 2.0") */
     @NotBlank(message = "El modelo del vehículo es obligatorio")
     @Size(max = 50)
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El modelo no puede ser solo números o símbolos")
     private String vehiclemodel;
 
     /** El año del vehículo */
@@ -48,8 +51,10 @@ public class WorkOrderUpdateRequestDTO {
     @Size(max = 30)
     private String vehiclecolor;
 
-    /** Las fallas reportadas por el cliente */
+    /** Las fallas reportadas por el cliente (debe ser texto explicativo, no solo números) */
     @NotBlank(message = "Las fallas reportadas son obligatorias")
+    @Size(min = 5, max = 1000, message = "Las fallas reportadas deben tener entre 5 y 1000 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "Las fallas reportadas deben ser un texto explicativo, no solo números o símbolos")
     private String failuresreported;
 
     /** La fecha estimada de entrega */
@@ -65,7 +70,8 @@ public class WorkOrderUpdateRequestDTO {
     /** El estado de los dientes */
     private WorkOrder.StateCondition statedents;
 
-    /** Las observaciones sobre los accesorios */
+    /** Las observaciones sobre los accesorios (opcional; si se informa, debe ser texto) */
+    @Pattern(regexp = "^$|^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "Las observaciones deben ser un texto, no solo números o símbolos")
     private String accessoriesobservations;
 
     /** La prioridad de la orden */

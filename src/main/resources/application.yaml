@@ -12,11 +12,7 @@ spring:
   datasource: 
     url: jdbc:postgresql://localhost:5432/Turbo_Mechanics
     username: postgres
-<<<<<<< Updated upstream
     password: santi0103
-=======
-    password: 1127941938
->>>>>>> Stashed changes
     driver-class-name: org.postgresql.Driver
 
   jpa:

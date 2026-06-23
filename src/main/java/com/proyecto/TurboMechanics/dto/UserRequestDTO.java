@@ -1,23 +1,30 @@
 package com.proyecto.TurboMechanics.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class UserRequestDTO {
  
-    /** nombre del cliente */
+    /** nombre del cliente (debe ser texto, no solo números) */
     @NotBlank(message = "The name cannot be empty")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "The name must contain letters, not only numbers or symbols")
     private String username;
  
-    /** identificacion del cliente */
+    /** identificacion del cliente (solo números, longitud razonable) */
     @NotNull(message = "the identification cannot be empty")
+    @Min(value = 10000, message = "Identification must have at least 5 digits")
+    @Max(value = 999999999, message = "Identification is too long")
     private Integer identification;
     
-    /** telefono del cleinte */
+    /** telefono del cliente (solo números, 7 a 15 dígitos) */
     @NotBlank(message = "the phone cannot be empty")
+    @Pattern(regexp = "^[0-9]{7,15}$", message = "Phone must contain only numbers (7 to 15 digits)")
     private String phone;
     
     /** correo del cliente */

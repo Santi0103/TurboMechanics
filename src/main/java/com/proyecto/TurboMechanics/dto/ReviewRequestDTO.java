@@ -10,9 +10,10 @@ public class ReviewRequestDTO {
     @NotNull(message = "El ID de la orden de trabajo es obligatorio")
     private Long workOrderId;
 
-    /** Comentario escrito por el cliente */
+    /** Comentario escrito por el cliente (debe ser texto, no solo números) */
     @NotBlank(message = "El comentario no puede estar vacío")
     @Size(min = 10, max = 1000, message = "El comentario debe tener entre 10 y 1000 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El comentario debe ser un texto, no solo números o símbolos")
     private String comment;
 
     /** Calificación de 1 a 5 estrellas */

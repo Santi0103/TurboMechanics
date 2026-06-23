@@ -9,8 +9,9 @@ import java.time.LocalDate;
 @Data
 public class MechanicRequestDTO {
 
-    /** Nombre completo del mecánico (obligatorio) */
+    /** Nombre completo del mecánico (obligatorio, debe ser texto) */
     @NotBlank(message = "El nombre es obligatorio")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El nombre no puede ser solo números o símbolos")
     private String name;
 
     /** Número de documento de identidad (obligatorio) */

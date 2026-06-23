@@ -4,6 +4,7 @@ import com.proyecto.TurboMechanics.enums.MovementType;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,7 +24,8 @@ public class MovementsRequestDTO {
     @Min(value = 1, message = "La cantidad debe ser al menos 1")
     private Integer stock;
     
-    /**motivo del movimiento */
+    /**motivo del movimiento (opcional; si se informa, debe ser texto, no solo números) */
     @Size(max = 200)
+    @Pattern(regexp = "^$|^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "El motivo debe ser un texto, no solo números o símbolos")
     private String motive;
 }

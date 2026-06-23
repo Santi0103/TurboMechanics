@@ -3,6 +3,8 @@ package com.proyecto.TurboMechanics.dto;
 import com.proyecto.TurboMechanics.enums.UrgencyLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -17,16 +19,20 @@ public class DiagnosisRequestDTO {
 
     /**
      * Fallas detectadas durante la revisión técnica (criterio 2).
-     * Obligatorio.
+     * Obligatorio, debe ser texto descriptivo.
      */
     @NotBlank(message = "Las fallas detectadas son obligatorias")
+    @Size(min = 5, max = 1000, message = "Las fallas detectadas deben tener entre 5 y 1000 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "Las fallas detectadas deben ser un texto descriptivo, no solo números o símbolos")
     private String detectedfailures;
 
     /**
      * Observaciones detalladas del mecánico (criterio 3).
-     * Obligatorio.
+     * Obligatorio, debe ser texto descriptivo.
      */
     @NotBlank(message = "Las observaciones del mecánico son obligatorias")
+    @Size(min = 5, max = 1000, message = "Las observaciones deben tener entre 5 y 1000 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Za-zÁÉÍÓÚÑáéíóúñ]).+$", message = "Las observaciones deben ser un texto descriptivo, no solo números o símbolos")
     private String mechanicobservations;
 
     /**
