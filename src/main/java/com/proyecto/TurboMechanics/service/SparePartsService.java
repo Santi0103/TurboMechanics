@@ -131,6 +131,19 @@ public class SparePartsService {
     }
     
     /**
+     * Registra la salida de inventario generada por la compra de un repuesto
+     * en la tienda (cliente, mecánico o admin comprando desde /tienda/comprar).
+     * El stock ya debe haber sido descontado antes de llamar este método.
+     *
+     * @param spareParts repuesto vendido
+     * @param quantity   cantidad vendida
+     */
+    @Transactional
+    public void registerSaleMovement(SpareParts spareParts, int quantity) {
+        registerMovements(spareParts, MovementType.Output, quantity, "Venta en tienda");
+    }
+
+    /**
      * Registra un movimiento manual de inventario (entrada o salida).
      * Ajusta el stock según el tipo de movimiento.
      *
