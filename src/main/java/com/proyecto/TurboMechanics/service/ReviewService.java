@@ -27,11 +27,99 @@ public class ReviewService {
     private final UsersRepository    usersRepository;
     private final WorkOrderRepository workOrderRepository;
 
+    /** Palabras ofensivas/insultos personales en español (incluye coloquialismos colombianos).
+     *  No incluye críticas legítimas al servicio (ej. "malo", "lento", "tramposo", "mentiroso"),
+     *  solo lenguaje irrespetuoso, despectivo o vulgar dirigido a personas. */
     private static final Set<String> OFFENSIVE_WORDS = Set.of(
-            "idiota", "imbecil", "estupido", "maldito", "basura", "inutil"
+            // Groserías / vulgaridades
+            "idiota", "idiotas", "imbecil", "imbeciles", "imbécil",
+            "estupido", "estupida", "estupidos", "estupidas", "estúpido", "estúpida",
+            "maldito", "maldita", "malditos", "malditas",
+            "mierda", "carajo", "joder",
+            "puta", "puto", "putas", "putos", "perra", "zorra",
+            "cabron", "cabrón", "verga", "pija", "malparido", "malparida", "gonorrea",
+            "marica", "maricon", "maricón", "gilipollas",
+
+            // Insultos de torpeza / poca inteligencia (coloquial)
+            "guevon", "güevón", "huevon", "huevón", "aguevado", "agüevado", "aguevao", "agüevao",
+            "pendejo", "pendeja", "pendejos", "pendejas", "pendejete",
+            "bobo", "boba", "bobazo", "bobolon", "bobolón",
+            "menso", "mensa", "tonto", "tonta", "zoquete",
+            "atembado", "atembada", "atarantado", "atarantada",
+            "gil", "lerdo", "lerda", "pasmado", "pasmada",
+            "bruto", "bruta", "brutico", "brutica", "burro", "burra",
+            "bestia", "tronco de burro",
+            "tarado", "tarada", "cretino", "cretina", "pelmazo",
+            "inutil", "inutiles", "inútil",
+
+            // Terquedad / necedad
+            "cabezon", "cabezón", "cabezadura", "terco", "terca", "necio", "necia",
+
+            // Ridiculez / vergüenza
+            "ridiculo", "ridicula", "ridículo", "ridícula", "payaso", "payasa", "fantoche", "farolero", "farolera",
+
+            // Suciedad / mal gusto / tacañería despectiva
+            "caspa", "chanda", "chandoso", "chandosa", "chichipato", "chichipata",
+            "miserable", "corroncho", "corroncha", "guiso", "ordinario", "ordinaria", "patan", "patán", "grosero", "grosera",
+
+            // Adulación / chisme / entrometido
+            "lambon", "lambón", "lagarto", "lagarta", "sapo",
+            "chismoso", "chismosa", "boquisuelto", "boquisuelta",
+            "metido", "metida", "entrometido", "entrometida",
+            "descarado", "descarada", "caradura", "sinverguenza", "sinvergüenza",
+
+            // Pereza / aprovechamiento
+            "haragan", "haragán", "haragana", "zangano", "zángano", "zangana",
+            "aprovechado", "aprovechada", "vividor", "vividora",
+
+            // Engaño / falsedad despectiva
+            "embaucador", "embaucadora", "embustero", "embustera",
+            "charlatan", "charlatán", "charlatana", "farsante",
+            "hipocrita", "hipócrita", "fariseo", "fariseica",
+            "culebrero", "culebrera", "cuentero", "cuentera", "vendehumo", "chicanero", "chicanera", "recochero", "recochera",
+
+            // Pesadez / mal genio
+            "jarto", "jarta", "canson", "cansón", "cansona", "mamon", "mamón", "mamona",
+            "intensito", "intensita", "fastidioso", "fastidiosa",
+            "amargado", "amargada", "malgeniado", "malgeniada", "cascarrabias",
+
+            // Envidia / arrogancia
+            "envidioso", "envidiosa", "celoso", "celosa",
+            "creido", "creída", "agrandado", "agrandada", "presumido", "presumida", "engreido", "engreído", "engreída",
+
+            // Escándalo / mala conducta
+            "desjuiciado", "desjuiciada", "alborotado", "alborotada", "escandaloso", "escandalosa",
+            "achantado", "achantada", "arrastrado", "arrastrada", "calidoso", "calidosa", "aletoso", "aletosa",
+
+            // Delincuencia despectiva
+            "bandido", "bandida", "pillo", "pilla", "malicioso", "maliciosa"
     );
+
+    /**
+     * Patrón único precompilado que combina todas las OFFENSIVE_WORDS con límites de palabra (\b),
+     * para no recompilar un regex por cada palabra en cada validación (mejor rendimiento).
+     */
+    private static final Pattern OFFENSIVE_PATTERN = Pattern.compile(
+            "\\b(" + OFFENSIVE_WORDS.stream()
+                    .map(Pattern::quote)
+                    .collect(java.util.stream.Collectors.joining("|")) + ")\\b",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    /** Detecta una misma palabra repetida 5 o más veces consecutivas (spam tipo "bueno bueno bueno..."). */
     private static final Pattern SPAM_PATTERN =
             Pattern.compile("(\\b\\w+\\b)(?:\\s+\\1){4,}", Pattern.CASE_INSENSITIVE);
+
+    /** Detecta un mismo carácter repetido 5 o más veces seguidas (ej. "aaaaaa", "????", "111111"). */
+    private static final Pattern REPEATED_CHAR_PATTERN =
+            Pattern.compile("(.)\\1{4,}");
+
+    /** Exige que el comentario tenga al menos una letra (rechaza reseñas de solo números, espacios o símbolos). */
+    private static final Pattern HAS_LETTER_PATTERN =
+            Pattern.compile(".*[A-Za-zÁÉÍÓÚÑáéíóúñ].*");
+
+    /** Cantidad mínima de palabras distintas que debe tener un comentario para considerarse contenido real. */
+    private static final int MIN_DISTINCT_WORDS = 2;
 
     /**
      * Crea una nueva reseña para una orden de trabajo finalizada. Verifica que el cliente no haya reseñado antes esa orden
@@ -44,6 +132,16 @@ public class ReviewService {
 
         Users user = findUser(userId);
         WorkOrder order = findOrder(request.getWorkOrderId());
+
+        // RF 10.5: la orden de trabajo debe pertenecer al cliente autenticado.
+        // Solo se puede reseñar una orden propia, identificada por el documento del cliente
+        // registrado en la orden vs. la identificación del usuario que inició sesión.
+        if (user.getIdentification() == null
+                || order.getClientidentification() == null
+                || !order.getClientidentification().trim().equals(String.valueOf(user.getIdentification()))) {
+            throw new IllegalStateException(
+                    "Solo puedes reseñar órdenes de trabajo registradas con tu propia identificación.");
+        }
 
         // CA-4: solo se puede reseñar una orden ENTREGADO
         if (order.getStateorder() != WorkOrder.StateOrder.ENTREGADO) {
@@ -136,18 +234,39 @@ public class ReviewService {
                 .orElseThrow(() -> new RuntimeException("Orden de trabajo no encontrada con id: " + orderId));
     }
 
-    //** Valida el contenido de la reseña */
+    //** Valida el contenido de la reseña (RF 10.5) */
     private void validateContent(String comment) {
-        String lower = comment.toLowerCase();
-        for (String word : OFFENSIVE_WORDS) {
-            if (lower.contains(word)) {
-                throw new IllegalArgumentException(
-                        "Tu reseña fue rechazada por contener lenguaje inapropiado.");
-            }
+        String trimmed = comment.trim();
+
+        if (!HAS_LETTER_PATTERN.matcher(trimmed).matches()) {
+            throw new IllegalArgumentException(
+                    "Tu reseña debe contener texto, no solo números o símbolos.");
         }
-        if (SPAM_PATTERN.matcher(comment).find()) {
+
+        String lower = trimmed.toLowerCase();
+
+        if (OFFENSIVE_PATTERN.matcher(lower).find()) {
+            throw new IllegalArgumentException(
+                    "Tu reseña fue rechazada por contener lenguaje inapropiado.");
+        }
+
+        if (SPAM_PATTERN.matcher(trimmed).find()) {
             throw new IllegalArgumentException(
                     "Tu reseña fue rechazada por contener contenido repetitivo (spam).");
+        }
+
+        if (REPEATED_CHAR_PATTERN.matcher(trimmed).find()) {
+            throw new IllegalArgumentException(
+                    "Tu reseña fue rechazada por contener caracteres repetidos sin sentido.");
+        }
+
+        long distinctWords = java.util.Arrays.stream(trimmed.split("\\s+"))
+                .map(String::toLowerCase)
+                .distinct()
+                .count();
+        if (distinctWords < MIN_DISTINCT_WORDS) {
+            throw new IllegalArgumentException(
+                    "Tu reseña es demasiado corta o poco descriptiva. Cuéntanos un poco más sobre tu experiencia.");
         }
     }
 
