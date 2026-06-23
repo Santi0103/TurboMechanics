@@ -20,9 +20,9 @@ public class RegisterRequestDTO {
 
     /** identificacion del cliente (solo números, longitud razonable de cédula) */
     @NotNull(message = "Identification is required")
-    @Min(value = 10000, message = "Identificacion es demasiado corta")
-    @Max(value = 999999999, message = "Identificacion es demasiado larga")
-    private Integer identification;
+    @Min(value = 10000, message = "La identificación debe tener al menos 5 dígitos")
+    @Max(value = 999999999999999L, message = "La identificación debe tener máximo 15 dígitos")
+    private Long identification;
 
     /** telefono del cliente (solo números, 7 a 15 dígitos) */
     @NotBlank(message = "Phone is required")
