@@ -191,6 +191,7 @@ public class ChatbotService {
 
         switch (rol) {
             case CLIENTE -> {
+                context.append(buildClientSparePartsContext());
                 Optional<Users> usuario = (userId != null) ? usersRepository.findById(userId) : Optional.<Users>empty();
                 if (usuario.isPresent()) {
                     String cedula = String.valueOf(usuario.get().getIdentification());
@@ -514,6 +515,35 @@ public class ChatbotService {
             CITAS DE HOY (%s):
             %s
             """.formatted(hoy.format(FECHA), listado);
+    }
+
+    /**
+     * Repuestos disponibles para el cliente que está hablando con el bot.
+     */
+    private String buildClientSparePartsContext() {
+    List<SpareParts> repuestos = sparePartsRepository.findAll().stream()
+        .filter(r -> r.getStock() > 0)
+        .toList();
+
+    if (repuestos.isEmpty()) {
+        return "\nTIENDA DE REPUESTOS:\nActualmente no hay repuestos disponibles.\n";
+    }
+
+    String listado = repuestos.stream()
+        .map(r -> "- %s (ref. %s) | Categoría: %s | Precio: $%s | Stock: %d".formatted(
+            r.getName(),
+            r.getReference(),
+            r.getCategory(),
+            formatPrice(r.getPrice()),
+            r.getStock()
+        ))
+        .collect(Collectors.joining("\n"));
+
+    return """
+
+        TIENDA DE REPUESTOS DISPONIBLES:
+        %s
+        """.formatted(listado);
     }
 
     private String formatPrice(BigDecimal price) {
