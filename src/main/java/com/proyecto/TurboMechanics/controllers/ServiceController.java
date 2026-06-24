@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.TurboMechanics.dto.PriceRequestDTO;
+import com.proyecto.TurboMechanics.dto.ServiceHistoryCheckResponseDTO;
 import com.proyecto.TurboMechanics.dto.ServiceRequestDTO;
 import com.proyecto.TurboMechanics.dto.ServiceResponseDTO;
 import com.proyecto.TurboMechanics.enums.RolEnum;
@@ -22,10 +23,14 @@ import com.proyecto.TurboMechanics.service.ServiceService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/catalogo")
 @RequiredArgsConstructor
+@Slf4j
 public class ServiceController {
 
     private final ServiceService serviceService;
@@ -109,6 +114,20 @@ public class ServiceController {
     }
 
     /**
+     * Verifica si el servicio tiene garantías asociadas antes de eliminarlo,
+     * para mostrar una advertencia en el frontend. No bloquea la eliminación,
+     * solo informa.
+     *
+     * @param id id del servicio
+     * @return ServiceHistoryCheckResponseDTO con el detalle del historial
+     */
+    @RequiresRole({ RolEnum.ADMIN })
+    @GetMapping("/{id}/historial-check")
+    public ResponseEntity<ServiceHistoryCheckResponseDTO> checkHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(serviceService.checkHistory(id));
+    }
+
+    /**
      * Elimina el servicio por id
      * 
      * @param id id del servicio para eliminar
@@ -116,13 +135,14 @@ public class ServiceController {
      */
     @RequiresRole({ RolEnum.ADMIN })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteService(@PathVariable Long id) {
+    public ResponseEntity<?> deleteService(@PathVariable Long id) {
         try {
             serviceService.deleteService(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            log.error("Error al eliminar servicio {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Error al eliminar el servicio"));
         }
     }
 

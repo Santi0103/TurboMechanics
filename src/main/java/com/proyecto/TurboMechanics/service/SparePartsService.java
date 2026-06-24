@@ -24,11 +24,13 @@ import com.proyecto.TurboMechanics.entity.InventoryMovements;
 import com.proyecto.TurboMechanics.entity.SpareParts;
 import com.proyecto.TurboMechanics.entity.SpareSale;
 import com.proyecto.TurboMechanics.entity.Warranty;
+import com.proyecto.TurboMechanics.entity.WarrantySparePartCoverage;
 import com.proyecto.TurboMechanics.enums.MovementType;
 import com.proyecto.TurboMechanics.repository.InventoryMovementsRepository;
 import com.proyecto.TurboMechanics.repository.SparePartsRepository;
 import com.proyecto.TurboMechanics.repository.SpareSaleRepository;
 import com.proyecto.TurboMechanics.repository.WarrantyRepository;
+import com.proyecto.TurboMechanics.repository.WarrantySparePartCoverageRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,8 @@ public class SparePartsService {
     private final SpareSaleRepository spareSaleRepository;
 
     private final WarrantyRepository warrantyRepository;
+
+    private final WarrantySparePartCoverageRepository warrantySparePartCoverageRepository;
     
     /**
      * Registra un nuevo repuesto en el sistema.
@@ -135,13 +139,14 @@ public class SparePartsService {
      */
     public SparePartHistoryCheckResponseDTO checkHistory(Long id) {
         int cantidadVentas = spareSaleRepository.findBySparePart_Id(id).size();
-        int cantidadGarantias = warrantyRepository.findBySparePartIdOrderByCreatedAtDesc(id).size();
+        long cantidadGarantias = warrantySparePartCoverageRepository.findBySparePart_Id(id)
+                .stream().map(c -> c.getWarranty().getId()).distinct().count();
 
         return SparePartHistoryCheckResponseDTO.builder()
                 .tieneVentas(cantidadVentas > 0)
                 .tieneGarantias(cantidadGarantias > 0)
                 .cantidadVentas(cantidadVentas)
-                .cantidadGarantias(cantidadGarantias)
+                .cantidadGarantias((int) cantidadGarantias)
                 .build();
     }
 
@@ -162,13 +167,18 @@ public class SparePartsService {
         SpareParts spareParts = sparePartsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Repuesto no encontrado con id: " + id));
 
-        // 1) Desvincular las garantías que cubren este repuesto (quedan con sparePart = null,
-        // pero la garantía en sí se conserva)
-        List<Warranty> warranties = warrantyRepository.findBySparePartIdOrderByCreatedAtDesc(id);
-        for (Warranty warranty : warranties) {
-            warranty.setSparePart(null);
+        // 1) Desvincular las filas de cobertura de garantías que cubren este repuesto
+        // (quedan con sparePart = null, pero la garantía y la fila en sí se conservan,
+        // guardando una copia de sus datos para que el comprobante de garantía siga
+        // mostrando qué repuesto cubría)
+        List<WarrantySparePartCoverage> coverages = warrantySparePartCoverageRepository.findBySparePart_Id(id);
+        for (WarrantySparePartCoverage coverage : coverages) {
+            coverage.setNameSnapshot(spareParts.getName());
+            coverage.setReferenceSnapshot(spareParts.getReference());
+            coverage.setCategorySnapshot(spareParts.getCategory());
+            coverage.setSparePart(null);
         }
-        warrantyRepository.saveAll(warranties);
+        warrantySparePartCoverageRepository.saveAll(coverages);
 
         // 2) Desvincular las ventas hechas sobre este repuesto (quedan con sparePart = null,
         // guardando una copia de sus datos para que sigan siendo identificables)

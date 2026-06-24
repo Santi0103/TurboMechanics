@@ -2,6 +2,8 @@ package com.proyecto.TurboMechanics.service;
 
 import com.proyecto.TurboMechanics.dto.WarrantyResponseDTO;
 import com.proyecto.TurboMechanics.dto.WarrantyValidationResponseDTO;
+import com.proyecto.TurboMechanics.dto.ServiceCoverageItemDTO;
+import com.proyecto.TurboMechanics.dto.SparePartCoverageItemDTO;
 import com.proyecto.TurboMechanics.entity.Warranty;
 import com.proyecto.TurboMechanics.entity.WarrantyValidation;
 import com.proyecto.TurboMechanics.enums.WarrantyValidationStatus;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.proyecto.TurboMechanics.enums.WarrantyStatus;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,8 +35,9 @@ public class WarrantyHistoryAndValidationService {
     @Transactional(readOnly = true)
     public List<WarrantyResponseDTO> getHistoryByClient(String clientIdentification) {
         return warrantyRepository
-                .findByWorkOrderClientidentificationOrderByCreatedAtDesc(clientIdentification)
+                .findByClientNameOrIdentification(clientIdentification)
                 .stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
@@ -153,15 +157,43 @@ public class WarrantyHistoryAndValidationService {
         dto.setClientName(w.getWorkOrder().getClientname());
         dto.setClientIdentification(w.getWorkOrder().getClientidentification());
         dto.setVehiclePlate(w.getWorkOrder().getVehicleplate());
-        if (w.getService() != null) {
-            dto.setServiceId(w.getService().getId());
-            dto.setServiceName(w.getService().getName());
-        }
-        if (w.getSparePart() != null) {
-            dto.setSparePartId(w.getSparePart().getId());
-            dto.setSparePartName(w.getSparePart().getName());
-            dto.setSparePartReference(w.getSparePart().getReference());
-        }
+
+        List<ServiceCoverageItemDTO> services = w.getServiceCoverages() == null ? List.of()
+                : w.getServiceCoverages().stream()
+                        .map(c -> {
+                            boolean deleted = c.getService() == null;
+                            String name = deleted ? c.getNameSnapshot() : c.getService().getName();
+                            Long serviceId = deleted ? null : c.getService().getId();
+                            return new ServiceCoverageItemDTO(
+                                    serviceId,
+                                    deleted && name != null ? name + " (eliminado)" : name
+                            );
+                        })
+                        .collect(Collectors.toList());
+        dto.setServices(services);
+
+        List<SparePartCoverageItemDTO> spareParts = w.getSparePartCoverages() == null ? List.of()
+                : w.getSparePartCoverages().stream()
+                        .map(c -> {
+                            boolean deleted = c.getSparePart() == null;
+                            String name = deleted ? c.getNameSnapshot() : c.getSparePart().getName();
+                            String reference = deleted ? c.getReferenceSnapshot() : c.getSparePart().getReference();
+                            Long sparePartId = deleted ? null : c.getSparePart().getId();
+                            return new SparePartCoverageItemDTO(
+                                    sparePartId,
+                                    deleted && name != null ? name + " (eliminado)" : name,
+                                    reference,
+                                    deleted
+                            );
+                        })
+                        .collect(Collectors.toList());
+        dto.setSpareParts(spareParts);
+
+        List<String> resumen = new ArrayList<>();
+        services.forEach(s -> resumen.add(s.getName()));
+        spareParts.forEach(p -> resumen.add(p.getName()));
+        dto.setCoverageSummary(resumen.isEmpty() ? "—" : String.join(", ", resumen));
+
         dto.setStartDate(w.getStartDate());
         dto.setEndDate(w.getEndDate());
         dto.setStatus(w.getStatus());
@@ -188,11 +220,22 @@ public class WarrantyHistoryAndValidationService {
         dto.setClientName(w.getWorkOrder().getClientname());
         dto.setVehiclePlate(w.getWorkOrder().getVehicleplate());
 
-        String coverage = w.getService() != null
-                ? "Servicio: " + w.getService().getName()
-                : w.getSparePart() != null
-                        ? "Repuesto: " + w.getSparePart().getName()
-                        : "Sin cobertura definida";
+        List<String> coverageParts = new ArrayList<>();
+        if (w.getServiceCoverages() != null) {
+            w.getServiceCoverages().forEach(c -> {
+                String name = c.getService() != null ? c.getService().getName()
+                        : (c.getNameSnapshot() != null ? c.getNameSnapshot() + " (eliminado)" : null);
+                if (name != null) coverageParts.add("Servicio: " + name);
+            });
+        }
+        if (w.getSparePartCoverages() != null) {
+            w.getSparePartCoverages().forEach(c -> {
+                String name = c.getSparePart() != null ? c.getSparePart().getName()
+                        : (c.getNameSnapshot() != null ? c.getNameSnapshot() + " (eliminado)" : null);
+                if (name != null) coverageParts.add("Repuesto: " + name);
+            });
+        }
+        String coverage = coverageParts.isEmpty() ? "Sin cobertura definida" : String.join(", ", coverageParts);
         dto.setCoverageDescription(coverage);
 
         dto.setStartDate(w.getStartDate());

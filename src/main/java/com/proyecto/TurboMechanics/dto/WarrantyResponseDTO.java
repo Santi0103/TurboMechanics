@@ -4,6 +4,7 @@ import lombok.Data;
 import com.proyecto.TurboMechanics.enums.WarrantyStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class WarrantyResponseDTO {
@@ -29,20 +30,14 @@ public class WarrantyResponseDTO {
     /** Placa del vehículo */
     private String vehiclePlate;
 
-    /** Id y nombre del servicio cubierto */
-    private Long serviceId;
+    /** Servicios cubiertos por la garantía (puede haber varios) */
+    private List<ServiceCoverageItemDTO> services;
 
-    /** Nombre del servicio cubierto */
-    private String serviceName;
+    /** Repuestos cubiertos por la garantía (puede haber varios) */
+    private List<SparePartCoverageItemDTO> spareParts;
 
-    /** Id y datos del repuesto cubierto */
-    private Long sparePartId;
-
-    /** Nombre del repuesto cubierto */
-    private String sparePartName;
-
-    /** Referencia del repuesto cubierto */
-    private String sparePartReference;
+    /** Texto corto con todos los nombres cubiertos, separados por coma (para mostrar en tablas) */
+    private String coverageSummary;
 
     /** Fecha de inicio de la vigencia */
     private LocalDate startDate;
