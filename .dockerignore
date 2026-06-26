@@ -1,0 +1,12 @@
+target/
+*.iml
+.idea/
+.vscode/
+.git/
+.gitignore
+whatsapp-service/
+uploads/evidencias/*
+uploads/repuestos/*
+!uploads/evidencias/.gitkeep
+!uploads/repuestos/.gitkeep
+HELP.md

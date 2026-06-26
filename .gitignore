@@ -4,6 +4,24 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Variables de entorno / secretos ###
+.env
+.env.*
+!.env.example
+
+### Archivos subidos por usuarios (persisten via Volume en producción) ###
+uploads/evidencias/*
+uploads/repuestos/*
+!uploads/evidencias/.gitkeep
+!uploads/repuestos/.gitkeep
+
+### WhatsApp microservice ###
+whatsapp-service/node_modules/
+whatsapp-service/sessions/*
+whatsapp-service/temp/*
+!whatsapp-service/sessions/.gitkeep
+!whatsapp-service/temp/.gitkeep
+
 ### STS ###
 .apt_generated
 .classpath
