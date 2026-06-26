@@ -19,7 +19,7 @@ public class Bill {
     /** id de la factura */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;    
 
     /** numero de la factura */
     @Column(name = "numero_factura", unique = true, nullable = false)

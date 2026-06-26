@@ -62,6 +62,13 @@ public class JwtValidationFilter extends OncePerRequestFilter {
         if (method.equals("OPTIONS")) {
             return true;
         }
+
+        // Talleres de la franquicia: lectura publica (mapa visible sin login),
+        // pero crear/editar/eliminar sigue exigiendo token + rol ADMIN.
+        if (method.equals("GET") && (path.equals("/talleres") || path.equals("/talleres/cercanos"))) {
+            return true;
+        }
+
         return path.equals("/auth/login") ||
                 path.equals("/auth/register") ||
                 path.equals("/auth/refresh") ||
