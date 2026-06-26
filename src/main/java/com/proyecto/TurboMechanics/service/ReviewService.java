@@ -10,6 +10,7 @@ import com.proyecto.TurboMechanics.repository.UsersRepository;
 import com.proyecto.TurboMechanics.repository.WorkOrderRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -167,8 +168,18 @@ public class ReviewService {
         review.setComment(request.getComment().trim());
         review.setRating(request.getRating());
 
-        Review saved = reviewRepository.save(review);
-        return toResponse(saved);
+        try {
+            Review saved = reviewRepository.save(review);
+            reviewRepository.flush();
+            return toResponse(saved);
+        } catch (DataIntegrityViolationException e) {
+            // Ocurre cuando ya existe una reseña (activa o eliminada) para este cliente
+            // y esta orden de trabajo, porque la restricción única de la BD no distingue
+            // entre activas e inactivas. Se traduce a un mensaje claro para el usuario.
+            throw new IllegalStateException(
+                    "Esta orden de trabajo ya tiene una reseña asociada (incluso si fue eliminada) " +
+                    "y no se puede registrar otra. Contacta al administrador si crees que esto es un error.");
+        }
     }
 
     /**

@@ -51,12 +51,12 @@ public class ChatbotService {
          "caremonda","careverga","careculo", "chimba","chimbas","chimbo","chimbos","guevon","guevón","guevones",
          "huevon","huevón","huevones","webon","webón","wevon","wevón","lampara","lámpara","zorra","zorras","perra","perras",
         "bastardo","bastardos","mamon","mamón","mamones","pelotudo","pelotudos","tarado","tarados","cretino","cretinos",
-        "gilipollas","gilipollas","capullo","capullos","mamaguevo","mamaguevo","mamaguevos","mamagüevo","come mierda",
+        "gilipollas","capullo","capullos","mamaguevo","mamaguevos","mamagüevo","come mierda",
         "comemierda","carepicha","carepichas","picha","pichas","monda","mondas","cagada","cagadas","cagon","cagón","cagones",
         "cabrona","cabronas","chingado","chingados","chingona","chingon","chingones","culiao","culiada","culiados",
         "conchesumadre","conchetumadre","ctm","csm","boludo","boludos","forro","forros","mongolico","mongólico","mongolicos",
         "mongólicos","baboso","babosos","payaso","payasos","burro","burros","mamerto","mamertos","atembado","atembados",
-        "estupida","estúpida","estupidas","estúpidas","idiota","idiotas","subnormal","subnormales"
+        "estupida","estúpida","estupidas","estúpidas","subnormal","subnormales"
     );
 
     public ChatbotResponseDTO chat(ChatbotRequestDTO request, Long rolId, Long userId) {
