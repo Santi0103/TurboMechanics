@@ -43,10 +43,20 @@ public class ChatbotService {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private static final Set<String> BLOCKED_WORDS = Set.of(
-        "puta", "puto", "mierda", "coño", "culo", "joder", "hostia", "verga",
-        "hijueputa", "gonorrea", "malparido", "hp", "idiota", "imbecil",
-        "estupido", "pendejo", "marica", "maricon", "hdp", "culero",
-        "pinche", "cabrón", "cabron", "chingada", "chingar"
+        "puta","putas","puto","putos","mierda","mierdas","coño","coños", 
+        "culo","culos","joder","hostia","verga","hijueputa","hijueputas","gonorrea","gonorreas",
+         "malparido","malparidos","mlp","mlps","hp","hptas", "idiota","idiotas","imbeciles",
+         "imbecil","estupido","estupidos","pendejo","pendejos","marica","maricas","mks","mk",
+         "maricon","hdp","culero","pinche","cabrón","cabron","chingada","chingar","carechimba","carechimbas",
+         "caremonda","careverga","careculo", "chimba","chimbas","chimbo","chimbos","guevon","guevón","guevones",
+         "huevon","huevón","huevones","webon","webón","wevon","wevón","lampara","lámpara","zorra","zorras","perra","perras",
+        "bastardo","bastardos","mamon","mamón","mamones","pelotudo","pelotudos","tarado","tarados","cretino","cretinos",
+        "gilipollas","capullo","capullos","mamaguevo","mamaguevos","mamagüevo","come mierda",
+        "comemierda","carepicha","carepichas","picha","pichas","monda","mondas","cagada","cagadas","cagon","cagón","cagones",
+        "cabrona","cabronas","chingado","chingados","chingona","chingon","chingones","culiao","culiada","culiados",
+        "conchesumadre","conchetumadre","ctm","csm","boludo","boludos","forro","forros","mongolico","mongólico","mongolicos",
+        "mongólicos","baboso","babosos","payaso","payasos","burro","burros","mamerto","mamertos","atembado","atembados",
+        "estupida","estúpida","estupidas","estúpidas","subnormal","subnormales"
     );
 
     public ChatbotResponseDTO chat(ChatbotRequestDTO request, Long rolId, Long userId) {
