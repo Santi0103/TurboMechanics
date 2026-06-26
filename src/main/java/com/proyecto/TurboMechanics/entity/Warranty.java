@@ -6,6 +6,8 @@ import lombok.Data;
 import com.proyecto.TurboMechanics.enums.WarrantyStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -24,15 +26,16 @@ public class Warranty {
     @JoinColumn(name = "id_orden_trabajo", nullable = false)
     private WorkOrder workOrder;
 
-    /** Servicio cubierto por la garantía (puede ser null si aplica a un repuesto) */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_servicio")
-    private ServiceEntity service;
+    /** Servicios cubiertos por la garantía (puede tener varios, o ninguno si solo cubre repuestos).
+     *  Se modela como entidad hija (no ManyToMany directo) para poder guardar un snapshot del
+     *  nombre, igual que con los repuestos: si el servicio se elimina del catálogo después de
+     *  crear la garantía, el nombre se sigue mostrando. */
+    @OneToMany(mappedBy = "warranty", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<WarrantyServiceCoverage> serviceCoverages = new ArrayList<>();
 
-    /** Repuesto cubierto por la garantía (puede ser null si aplica a un servicio) */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_repuesto")
-    private SpareParts sparePart;
+    /** Repuestos cubiertos por la garantía (puede tener varios, o ninguno si solo cubre servicios) */
+    @OneToMany(mappedBy = "warranty", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<WarrantySparePartCoverage> sparePartCoverages = new ArrayList<>();
 
     /** Fecha de inicio de la vigencia de la garantía */
     @NotNull(message = "La fecha de inicio de vigencia es obligatoria")

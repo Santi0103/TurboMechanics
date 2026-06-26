@@ -18,10 +18,13 @@ import com.proyecto.TurboMechanics.dto.MessageResponseDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderRequestDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderResponseDTO;
 import com.proyecto.TurboMechanics.dto.WorkOrderUpdateRequestDTO;
+import com.proyecto.TurboMechanics.entity.Users;
 import com.proyecto.TurboMechanics.entity.WorkOrder;
 import com.proyecto.TurboMechanics.enums.RolEnum;
+import com.proyecto.TurboMechanics.repository.UsersRepository;
 import com.proyecto.TurboMechanics.security.RequiresRole;
 import com.proyecto.TurboMechanics.service.WorkOrderService;
+import java.util.Optional;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,9 @@ import lombok.RequiredArgsConstructor;
 public class WorkOrderController {
 
     private final WorkOrderService ordenTrabajoService;
+
+    private final UsersRepository usersRepository;
+
 
     /**
      * Endpoint para crear una nueva orden de trabajo. Solo accesible para usuarios
@@ -253,6 +259,22 @@ public class WorkOrderController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new MessageResponseDTO(e.getMessage()));
+        }
+    }
+
+    /**
+     * Endpoint para verificar si el cliente existe
+     */
+    @GetMapping("/client/exists/{identification}")
+    public ResponseEntity<Void> clientExists(@PathVariable Integer identification) {
+        try {
+            Optional<Users> user = usersRepository.findByIdentification(identification);
+            if (user.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

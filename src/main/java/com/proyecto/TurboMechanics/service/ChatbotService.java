@@ -43,10 +43,20 @@ public class ChatbotService {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private static final Set<String> BLOCKED_WORDS = Set.of(
-        "puta", "puto", "mierda", "coño", "culo", "joder", "hostia", "verga",
-        "hijueputa", "gonorrea", "malparido", "hp", "idiota", "imbecil",
-        "estupido", "pendejo", "marica", "maricon", "hdp", "culero",
-        "pinche", "cabrón", "cabron", "chingada", "chingar"
+        "puta","putas","puto","putos","mierda","mierdas","coño","coños", 
+        "culo","culos","joder","hostia","verga","hijueputa","hijueputas","gonorrea","gonorreas",
+         "malparido","malparidos","mlp","mlps","hp","hptas", "idiota","idiotas","imbeciles",
+         "imbecil","estupido","estupidos","pendejo","pendejos","marica","maricas","mks","mk",
+         "maricon","hdp","culero","pinche","cabrón","cabron","chingada","chingar","carechimba","carechimbas",
+         "caremonda","careverga","careculo", "chimba","chimbas","chimbo","chimbos","guevon","guevón","guevones",
+         "huevon","huevón","huevones","webon","webón","wevon","wevón","lampara","lámpara","zorra","zorras","perra","perras",
+        "bastardo","bastardos","mamon","mamón","mamones","pelotudo","pelotudos","tarado","tarados","cretino","cretinos",
+        "gilipollas","capullo","capullos","mamaguevo","mamaguevos","mamagüevo","come mierda",
+        "comemierda","carepicha","carepichas","picha","pichas","monda","mondas","cagada","cagadas","cagon","cagón","cagones",
+        "cabrona","cabronas","chingado","chingados","chingona","chingon","chingones","culiao","culiada","culiados",
+        "conchesumadre","conchetumadre","ctm","csm","boludo","boludos","forro","forros","mongolico","mongólico","mongolicos",
+        "mongólicos","baboso","babosos","payaso","payasos","burro","burros","mamerto","mamertos","atembado","atembados",
+        "estupida","estúpida","estupidas","estúpidas","subnormal","subnormales"
     );
 
     public ChatbotResponseDTO chat(ChatbotRequestDTO request, Long rolId, Long userId) {
@@ -191,6 +201,7 @@ public class ChatbotService {
 
         switch (rol) {
             case CLIENTE -> {
+                context.append(buildClientSparePartsContext());
                 Optional<Users> usuario = (userId != null) ? usersRepository.findById(userId) : Optional.<Users>empty();
                 if (usuario.isPresent()) {
                     String cedula = String.valueOf(usuario.get().getIdentification());
@@ -348,13 +359,29 @@ public class ChatbotService {
 
         String listado = garantias.stream()
             .limit(10)
-            .map(g -> "- Comprobante %s | Cubre: %s | Vigencia: %s a %s | Estado: %s".formatted(
-                g.getVoucherNumber() != null ? g.getVoucherNumber() : "Sin comprobante",
-                g.getService() != null ? g.getService().getName() : (g.getSparePart() != null ? g.getSparePart().getName() : "No especificado"),
-                g.getStartDate().format(FECHA),
-                g.getEndDate().format(FECHA),
-                g.getStatus()
-            ))
+            .map(g -> {
+                List<String> partes = new java.util.ArrayList<>();
+                if (g.getServiceCoverages() != null) {
+                    g.getServiceCoverages().forEach(c -> {
+                        if (c.getService() != null) partes.add(c.getService().getName());
+                        else if (c.getNameSnapshot() != null) partes.add(c.getNameSnapshot() + " (eliminado)");
+                    });
+                }
+                if (g.getSparePartCoverages() != null) {
+                    g.getSparePartCoverages().forEach(c -> {
+                        if (c.getSparePart() != null) partes.add(c.getSparePart().getName());
+                        else if (c.getNameSnapshot() != null) partes.add(c.getNameSnapshot() + " (eliminado)");
+                    });
+                }
+                String cubre = partes.isEmpty() ? "No especificado" : String.join(", ", partes);
+                return "- Comprobante %s | Cubre: %s | Vigencia: %s a %s | Estado: %s".formatted(
+                    g.getVoucherNumber() != null ? g.getVoucherNumber() : "Sin comprobante",
+                    cubre,
+                    g.getStartDate().format(FECHA),
+                    g.getEndDate().format(FECHA),
+                    g.getStatus()
+                );
+            })
             .collect(Collectors.joining("\n"));
 
         return """
@@ -498,6 +525,35 @@ public class ChatbotService {
             CITAS DE HOY (%s):
             %s
             """.formatted(hoy.format(FECHA), listado);
+    }
+
+    /**
+     * Repuestos disponibles para el cliente que está hablando con el bot.
+     */
+    private String buildClientSparePartsContext() {
+    List<SpareParts> repuestos = sparePartsRepository.findAll().stream()
+        .filter(r -> r.getStock() > 0)
+        .toList();
+
+    if (repuestos.isEmpty()) {
+        return "\nTIENDA DE REPUESTOS:\nActualmente no hay repuestos disponibles.\n";
+    }
+
+    String listado = repuestos.stream()
+        .map(r -> "- %s (ref. %s) | Categoría: %s | Precio: $%s | Stock: %d".formatted(
+            r.getName(),
+            r.getReference(),
+            r.getCategory(),
+            formatPrice(r.getPrice()),
+            r.getStock()
+        ))
+        .collect(Collectors.joining("\n"));
+
+    return """
+
+        TIENDA DE REPUESTOS DISPONIBLES:
+        %s
+        """.formatted(listado);
     }
 
     private String formatPrice(BigDecimal price) {
