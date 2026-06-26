@@ -49,7 +49,7 @@ public class WorkshopController {
      * de esa ciudad; si no, se retornan todos los talleres activos)
      * @return lista de talleres activos ordenados por nombre
      */
-    @RequiresRole({RolEnum.CLIENTE, RolEnum.ADMIN, RolEnum.MECANICO})
+    // Publico: cualquier visitante (logueado o no) puede ver los talleres activos
     @GetMapping
     public ResponseEntity<?> getActiveWorkshops(
             @RequestParam(required = false) String ciudad) {
@@ -70,7 +70,7 @@ public class WorkshopController {
       * @param radio radio de búsqueda en kilómetros (opcional, por defecto 50 km)
       * @return lista de talleres activos dentro del radio especificado, ordenados por distancia al cliente
       */
-    @RequiresRole({RolEnum.CLIENTE, RolEnum.ADMIN, RolEnum.MECANICO})
+    // Publico: cualquier visitante (logueado o no) puede ver talleres cercanos
     @GetMapping("/cercanos")
     public ResponseEntity<?> getWorkshopsNearby(
             @RequestParam Double lat,
