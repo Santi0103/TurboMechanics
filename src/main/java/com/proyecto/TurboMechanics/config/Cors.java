@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class Cors {
 
     // Lista separada por comas, ej: http://localhost:4200,https://turbomechanics.vercel.app
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:4200, https://turbo-mechanics-front.vercel.app/}")
     private String allowedOrigins;
 
     @Bean
