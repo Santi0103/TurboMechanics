@@ -24,7 +24,7 @@ fs.mkdirSync(SESSION_DIR, { recursive: true });
 fs.mkdirSync(process.env.TEMP_DIR || './temp', { recursive: true });
 
 const savedSessions = fs.readdirSync(SESSION_DIR, { withFileTypes: true })
-  .filter(d => d.isDirectory())
+  .filter(d => d.isDirectory() && d.name !== 'lost+found')
   .map(d => d.name);
 
 if (savedSessions.length > 0) {
