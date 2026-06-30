@@ -112,6 +112,30 @@ public class SparePartsService {
     public SparePartsResponseDTO updateSpareParts(Long id, SparePartsRequestDTO request) {
         SpareParts spareParts = findOrThrow(id);
 
+        if (request.getName() != null) {
+            spareParts.setName(request.getName());
+        }
+
+        if (request.getReference() != null) {
+            if (!request.getReference().equals(spareParts.getReference())
+                    && sparePartsRepository.existsByReference(request.getReference())) {
+                throw new RuntimeException("Ya existe un repuesto con la referencia: " + request.getReference());
+            }
+            spareParts.setReference(request.getReference());
+        }
+
+        if (request.getCategory() != null) {
+            spareParts.setCategory(request.getCategory());
+        }
+
+        if (request.getPrice() != null) {
+            spareParts.setPrice(request.getPrice());
+        }
+
+        if (request.getStockMin() != null) {
+            spareParts.setStockMin(request.getStockMin());
+        }
+
         if (request.getStock() != null) {
             int sparePartsQuantity = request.getStock() - spareParts.getStock();
             if (sparePartsQuantity > 0) {
@@ -126,10 +150,10 @@ public class SparePartsService {
         if (request.getImageUrl() != null) {
             spareParts.setImageUrl(request.getImageUrl());
         }
- 
+
         return toResponse(sparePartsRepository.save(spareParts));
     }
-    
+        
     /**
      * Verifica si un repuesto ya tiene historial asociado (ventas y/o
      * garantías), para poder advertir al usuario antes de eliminarlo.

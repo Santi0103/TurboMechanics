@@ -12,7 +12,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/Turbo_Mechanics}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:santi0103}
+    password: ${SPRING_DATASOURCE_PASSWORD:1127941938}
     driver-class-name: org.postgresql.Driver
 
   jpa:
