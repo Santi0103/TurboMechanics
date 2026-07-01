@@ -4,9 +4,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +20,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PasswordResetService {
-    
+
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JavaMailSender mailSender;
-
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    private final EmailService emailService;
 
     /** Minutos de validez del código */
     private static final int CODE_EXPIRY_MINUTES = 15;
@@ -52,7 +46,8 @@ public class PasswordResetService {
         user.setResetCodeExpiry(LocalDateTime.now().plusMinutes(CODE_EXPIRY_MINUTES));
         usersRepository.save(user);
 
-        sendCodeByEmail(user.getEmail(), code);
+        // Llamada asíncrona: no bloquea, el método sigue y responde de una
+        emailService.sendResetCodeEmail(user.getEmail(), code, CODE_EXPIRY_MINUTES);
 
         MessageResponseDTO response = new MessageResponseDTO();
         response.setMessage("Código de recuperación enviado al correo registrado.");
@@ -145,27 +140,5 @@ public class PasswordResetService {
         SecureRandom random = new SecureRandom();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
-    }
-
-    /**
-     * Envía el código de recuperación al correo electrónico del usuario.
-     *
-     * @param toEmail correo del destinatario
-     * @param code    código generado
-     */
-    private void sendCodeByEmail(String toEmail, String code) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(toEmail);
-        message.setSubject("Turbo Mechanics - Código de recuperación de contraseña");
-        message.setText(
-            "Hola,\n\n" +
-            "Recibimos una solicitud para restablecer tu contraseña en Turbo Mechanics.\n\n" +
-            "Tu código de recuperación es: " + code + "\n\n" +
-            "Este código es válido por " + CODE_EXPIRY_MINUTES + " minutos.\n\n" +
-            "Si no solicitaste este cambio, ignora este mensaje.\n\n" +
-            "Turbo Mechanics"
-        );
-        mailSender.send(message);
     }
 }
