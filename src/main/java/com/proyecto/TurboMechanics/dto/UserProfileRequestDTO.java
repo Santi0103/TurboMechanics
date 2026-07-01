@@ -19,7 +19,7 @@ public class UserProfileRequestDTO {
     /** Cédula/identificación (solo números, longitud razonable) */
     @NotNull(message = "La cédula es obligatoria")
     @Min(value = 10000, message = "La identificación debe tener al menos 5 dígitos")
-    @Max(value = 999999999, message = "La identificación es demasiado larga")
+    @Max(value = 999999999999999L, message = "La identificación debe tener máximo 15 dígitos")
     private Integer identification;
 
     /** Teléfono */

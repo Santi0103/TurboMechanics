@@ -19,7 +19,7 @@ public class UserRequestDTO {
     /** identificacion del cliente (solo números, longitud razonable) */
     @NotNull(message = "the identification cannot be empty")
     @Min(value = 10000, message = "Identification must have at least 5 digits")
-    @Max(value = 999999999, message = "Identification is too long")
+    @Max(value = 999999999999999L, message = "La identificación debe tener máximo 15 dígitos")
     private Integer identification;
     
     /** telefono del cliente (solo números, 7 a 15 dígitos) */
